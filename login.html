@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In — Silent Lease</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .form-input:focus-visible, button:focus-visible { outline: 2px solid #008080; outline-offset: 2px; }
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F5F5F7; padding: var(--space-xl); }
+    .auth-card { max-width: 420px; width: 100%; }
+    .auth-card h1 { font-size: 1.75rem; margin-bottom: var(--space-md); color: var(--color-primary); }
+    .auth-card p { color: var(--color-text-muted); margin-bottom: var(--space-xl); }
+    .auth-form { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .form-group label { display: block; font-weight: 500; margin-bottom: var(--space-sm); font-size: 0.95rem; }
+    .error-msg { color: var(--color-danger); font-size: 0.9rem; margin-top: var(--space-xs); }
+    .auth-footer { margin-top: var(--space-xl); text-align: center; }
+    .auth-footer a { font-weight: 500; }
+    .back-link { display: inline-flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-lg); color: var(--color-text-muted); font-size: 0.95rem; }
+    .back-link:hover { color: var(--color-primary); }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="card auth-card">
+      <a href="index.html" class="back-link"><span>←</span> Back to Home</a>
+      <h1>Welcome Back</h1>
+      <p>Log in to access your exit plan and toolkit.</p>
+
+      <form class="auth-form" id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-input" placeholder="you@example.com" autocomplete="email" required>
+          <span class="error-msg" id="email-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-input" placeholder="Your password" autocomplete="current-password" required>
+          <span class="error-msg" id="password-error"></span>
+        </div>
+        <button type="submit" class="btn-primary btn-accent" style="width: 100%;">Log In</button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const emailEl = document.getElementById('email');
+        const passwordEl = document.getElementById('password');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+
+        emailError.textContent = '';
+        passwordError.textContent = '';
+        emailEl.classList.remove('error');
+        passwordEl.classList.remove('error');
+
+        const email = emailEl.value.trim();
+        const password = passwordEl.value;
+
+        const result = login(email, password);
+        if (result.success) {
+          showToast('Welcome back! Redirecting...', 'success');
+          const redirect = new URLSearchParams(window.location.search).get('redirect') || 'dashboard.html';
+          setTimeout(function() {
+            window.location.href = redirect.startsWith('/') ? redirect.slice(1) : redirect;
+          }, 800);
+        } else {
+          showToast(result.error, 'error');
+          if (result.error.includes('account')) emailEl.classList.add('error');
+          if (result.error.includes('password')) passwordEl.classList.add('error');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — Silent Lease</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .form-input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid #008080; outline-offset: 2px; }
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F5F5F7; padding: var(--space-xl); }
+    .auth-card { max-width: 560px; width: 100%; }
+    .auth-card h1 { font-size: 1.75rem; margin-bottom: var(--space-md); color: var(--color-primary); }
+    .auth-card > p { color: var(--color-text-muted); margin-bottom: var(--space-xl); }
+    .auth-form { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .auth-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+    .form-group { min-width: 0; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: var(--space-sm); font-size: 0.95rem; }
+    .form-group--full { grid-column: 1 / -1; }
+    .error-msg { color: var(--color-danger); font-size: 0.9rem; margin-top: var(--space-xs); }
+    .auth-footer { margin-top: var(--space-xl); text-align: center; }
+    .auth-footer a { font-weight: 500; }
+    .back-link { display: inline-flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-lg); color: var(--color-text-muted); font-size: 0.95rem; }
+    .back-link:hover { color: var(--color-primary); }
+    .strength-meter { display: flex; gap: var(--space-xs); margin-top: var(--space-sm); }
+    .strength-meter__bar { flex: 1; height: 4px; background: var(--color-border); border-radius: 2px; transition: background 0.3s; }
+    .strength-meter__bar.weak { background: var(--color-danger); }
+    .strength-meter__bar.medium { background: #F59E0B; }
+    .strength-meter__bar.strong { background: var(--color-accent); }
+    .strength-text { font-size: 0.8rem; margin-top: var(--space-xs); color: var(--color-text-muted); }
+    .strength-text.weak { color: var(--color-danger); }
+    .strength-text.medium { color: #F59E0B; }
+    .strength-text.strong { color: var(--color-accent); }
+    @media (max-width: 600px) { .auth-form__row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="card auth-card">
+      <a href="index.html" class="back-link"><span>←</span> Back to Home</a>
+      <h1>Create Your Account</h1>
+      <p>Join Silent Lease to get your custom exit toolkit.</p>
+
+      <form class="auth-form" id="signup-form">
+        <div class="auth-form__row">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" class="form-input" placeholder="Your name" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" class="form-input" placeholder="you@example.com" autocomplete="email" required>
+            <span class="error-msg" id="email-error"></span>
+          </div>
+        </div>
+        <div class="auth-form__row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" class="form-input" placeholder="(555) 123-4567" autocomplete="tel">
+            <span class="error-msg" id="phone-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="occupation">Occupation</label>
+            <select id="occupation" class="form-input" autocomplete="organization-title">
+              <option value="">Select...</option>
+              <option value="Student">Student</option>
+              <option value="Professional">Professional</option>
+              <option value="Entrepreneur">Entrepreneur</option>
+              <option value="Retired">Retired</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group form-group--full">
+          <label for="address">Current Address</label>
+          <input type="text" id="address" class="form-input" placeholder="Street, City, Province" autocomplete="street-address">
+        </div>
+        <div class="form-group form-group--full">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-input" placeholder="At least 8 characters" autocomplete="new-password" required>
+          <div class="strength-meter" id="strength-meter">
+            <span class="strength-meter__bar" id="s1"></span>
+            <span class="strength-meter__bar" id="s2"></span>
+            <span class="strength-meter__bar" id="s3"></span>
+          </div>
+          <span class="strength-text" id="strength-text">Enter a password</span>
+          <span class="error-msg" id="password-error"></span>
+        </div>
+        <button type="submit" class="btn-primary btn-accent" style="width: 100%;">Sign Up</button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a href="login.html">Log In</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var preEmail = params.get('email');
+      if (preEmail) document.getElementById('email').value = preEmail;
+
+      // Password strength meter
+      var pw = document.getElementById('password');
+      var s1 = document.getElementById('s1');
+      var s2 = document.getElementById('s2');
+      var s3 = document.getElementById('s3');
+      var strengthText = document.getElementById('strength-text');
+
+      pw.addEventListener('input', function() {
+        var strength = getPasswordStrength(this.value);
+        s1.className = 'strength-meter__bar' + (strength === 'weak' || strength === 'medium' || strength === 'strong' ? ' ' + strength : '');
+        s2.className = 'strength-meter__bar' + (strength === 'medium' || strength === 'strong' ? ' ' + strength : '');
+        s3.className = 'strength-meter__bar' + (strength === 'strong' ? ' strong' : '');
+        strengthText.textContent = strength === 'weak' ? 'Weak' : strength === 'medium' ? 'Medium' : 'Strong';
+        strengthText.className = 'strength-text ' + strength;
+      });
+
+      document.getElementById('signup-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var nameEl = document.getElementById('name');
+        var emailEl = document.getElementById('email');
+        var passwordEl = document.getElementById('password');
+        var phoneEl = document.getElementById('phone');
+        var addressEl = document.getElementById('address');
+        var occupationEl = document.getElementById('occupation');
+        var emailError = document.getElementById('email-error');
+        var passwordError = document.getElementById('password-error');
+        var phoneError = document.getElementById('phone-error');
+
+        emailError.textContent = '';
+        passwordError.textContent = '';
+        phoneError.textContent = '';
+        emailEl.classList.remove('error');
+        passwordEl.classList.remove('error');
+        phoneEl.classList.remove('error');
+
+        var email = emailEl.value.trim();
+        var password = passwordEl.value;
+        var name = nameEl.value.trim();
+        var phone = phoneEl.value.trim();
+        var address = addressEl.value.trim();
+        var occupation = occupationEl.value || '';
+
+        if (!isValidEmail(email)) {
+          emailError.textContent = 'Please enter a valid email address.';
+          emailEl.classList.add('error');
+          return;
+        }
+        if (!isValidPassword(password)) {
+          passwordError.textContent = 'Password must be at least 8 characters.';
+          passwordEl.classList.add('error');
+          return;
+        }
+        if (!isValidPhone(phone)) {
+          phoneError.textContent = 'Please enter a valid phone number (10–15 digits).';
+          phoneEl.classList.add('error');
+          return;
+        }
+
+        var result = register(email, password, name, phone, address, occupation);
+        if (result.success) {
+          showToast('Account created! Redirecting to dashboard...', 'success');
+          setTimeout(function() {
+            window.location.href = 'dashboard.html';
+          }, 800);
+        } else {
+          showToast(result.error, 'error');
+          if (result.error.includes('email')) emailEl.classList.add('error');
+          if (result.error.includes('Password')) passwordEl.classList.add('error');
+          if (result.error.includes('phone')) phoneEl.classList.add('error');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

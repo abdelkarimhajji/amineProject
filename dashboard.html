@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Silent Lease</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .dashboard { display: flex; min-height: 100vh; }
+    .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; z-index: 100; background: rgba(26, 35, 126, 0.88); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); color: white; padding: var(--space-xl); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar__brand { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2xl); flex-shrink: 0; }
+    .sidebar__nav { display: flex; flex-direction: column; gap: var(--space-sm); flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    .sidebar__nav a { color: rgba(255,255,255,0.9); padding: var(--space-md); border-radius: var(--radius-md); transition: background 0.4s ease, color 0.4s ease; display: flex; align-items: center; gap: var(--space-md); }
+    .sidebar__nav a:hover { background: rgba(255,255,255,0.12); color: white; }
+    .sidebar__nav a:hover .sidebar__nav-text { transform: translateX(5px); }
+    .sidebar__nav a.active { background: rgba(0,128,128,0.35); color: white; }
+    .sidebar__nav i { width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar__nav-text { display: inline-block; transition: transform 0.25s ease; }
+    .main { flex: 1; margin-left: 260px; padding: var(--space-2xl); background: var(--color-background); min-height: 100vh; }
+    .main__header { margin-bottom: var(--space-xl); }
+    .main__header h1 { font-size: 1.75rem; color: var(--color-primary); }
+    .main__header p { color: var(--color-text-muted); margin-top: var(--space-xs); }
+    .dashboard-glass { background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border-radius: var(--radius-card); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 24px rgba(26,35,126,0.06); transition: transform 450ms cubic-bezier(0.16,1,0.3,1), box-shadow 450ms cubic-bezier(0.16,1,0.3,1); }
+    .dashboard-glass:hover { box-shadow: 0 20px 40px rgba(0, 128, 128, 0.08); }
+    .dashboard-skeleton { display: grid; grid-template-columns: 1fr 260px; gap: var(--space-xl); margin-bottom: var(--space-2xl); }
+    .dashboard-skeleton .skeleton-block { height: 200px; border-radius: var(--radius-card); background: linear-gradient(90deg, var(--color-border) 25%, rgba(26,35,126,0.06) 50%, var(--color-border) 75%); background-size: 200% 100%; animation: skeletonShimmer 1.2s ease-in-out infinite; border: 1px solid rgba(255,255,255,0.1); }
+    .dashboard-skeleton .skeleton-block--tall { height: 320px; }
+    .dashboard-skeleton .skeleton-block--feed { height: 280px; }
+    @keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .dashboard-body { display: block; margin-bottom: var(--space-2xl); }
+    .dashboard-body.is-loading { opacity: 0; pointer-events: none; }
+    .dashboard-body.is-ready { animation: dashboardReveal 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes dashboardReveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: auto auto auto; gap: var(--space-lg); }
+    .bento-lease { grid-column: span 2; grid-row: span 1; padding: var(--space-xl); min-height: 220px; display: flex; align-items: center; gap: var(--space-2xl); flex-wrap: wrap; }
+    .bento-stat { padding: var(--space-lg); min-height: 100px; }
+    .bento-next { grid-column: span 2; padding: var(--space-lg); }
+    .lease-circle-wrap { position: relative; width: 160px; height: 160px; flex-shrink: 0; }
+    .lease-circle-outer { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--color-accent) 0deg, var(--color-accent) var(--circle-deg, 0deg), rgba(0,128,128,0.15) var(--circle-deg, 0deg) 360deg); box-shadow: 0 8px 24px rgba(0,128,128,0.25); padding: 10px; }
+    .lease-circle-inner { width: 100%; height: 100%; border-radius: 50%; background: var(--color-background); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .lease-countdown { font-size: 0.65rem; color: #5C5C7A; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+    .lease-countdown__val { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: #1A1A2E; line-height: 1.2; }
+    .lease-countdown__unit { font-size: 0.6rem; color: #5C5C7A; }
+    #lease-health-ring-wrap { margin-top: var(--space-md); }
+    .lease-legend { flex: 1; min-width: 200px; }
+    .lease-legend h3 { font-size: 1rem; margin-bottom: var(--space-xs); color: #1A1A2E; }
+    .lease-legend p { font-size: 0.9rem; color: #5C5C7A; margin: 0; }
+    .stat-lease-row { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+    .live-pulse { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); animation: livePulse 2s ease-in-out infinite; flex-shrink: 0; }
+    @keyframes livePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); } 50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); } }
+    .stat-card__label { font-size: 0.8rem; color: #5C5C7A; margin-bottom: var(--space-xs); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-card__value { font-size: 1.35rem; font-weight: 700; color: #1A1A2E; }
+    .stat-card__value--accent { color: var(--color-accent); }
+    .activity-feed { padding: var(--space-lg); border-radius: var(--radius-card); background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 24px rgba(26,35,126,0.06); }
+    .activity-feed h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: var(--space-md); color: #1A1A2E; text-transform: uppercase; letter-spacing: 0.05em; }
+    .activity-feed__list { display: flex; flex-direction: column; gap: 0; }
+    .activity-feed__item { display: flex; align-items: flex-start; gap: var(--space-md); padding: var(--space-sm) 0; position: relative; padding-left: var(--space-lg); }
+    .activity-feed__item::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: -4px; width: 2px; background: var(--color-border); }
+    .activity-feed__item:last-child::before { display: none; }
+    .activity-feed__item.done .activity-feed__item-dot { background: var(--color-accent); color: white; box-shadow: 0 0 12px rgba(0,128,128,0.5), 0 0 0 2px rgba(0,128,128,0.2); }
+    .activity-feed__item.current .activity-feed__item-dot { background: var(--color-primary); color: white; box-shadow: 0 0 16px rgba(26,35,126,0.5), 0 0 0 4px rgba(26,35,126,0.25); animation: activityPulse 2s ease-in-out infinite; }
+    .activity-feed__item.upcoming .activity-feed__item-dot { background: var(--color-border); color: #5C5C7A; box-shadow: 0 0 0 1px rgba(0,0,0,0.06); }
+    @keyframes activityPulse { 0%, 100% { box-shadow: 0 0 16px rgba(26,35,126,0.5), 0 0 0 4px rgba(26,35,126,0.25); } 50% { box-shadow: 0 0 24px rgba(26,35,126,0.3), 0 0 0 12px rgba(26,35,126,0); } }
+    .activity-feed__item-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; flex-shrink: 0; margin-left: -30px; position: relative; z-index: 1; transition: all 450ms cubic-bezier(0.16,1,0.3,1); }
+    .activity-feed__item-body { flex: 1; min-width: 0; }
+    .activity-feed__item-title { font-size: 0.9rem; font-weight: 600; color: #1A1A2E; margin-bottom: 2px; }
+    .activity-feed__badge { display: inline-block; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 4px; margin-top: 2px; }
+    .activity-feed__badge--done { background: rgba(0,128,128,0.15); color: var(--color-accent); }
+    .activity-feed__badge--current { background: rgba(26,35,126,0.15); color: var(--color-primary); }
+    .activity-feed__badge--upcoming { background: var(--color-border); color: var(--color-text-muted); }
+    .next-steps-section { margin-bottom: var(--space-xl); }
+    .next-steps-section__title { font-size: 1rem; font-weight: 700; color: #1A1A2E; margin-bottom: var(--space-md); }
+    .next-steps-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); }
+    .next-steps-row .action-feed-item { flex-direction: column; align-items: stretch; text-align: left; margin-bottom: 0; padding: var(--space-lg); border-radius: var(--radius-card); background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.06); }
+    .next-steps-row .action-feed-item__priority { align-self: flex-start; margin-bottom: var(--space-sm); }
+    .next-steps-row .action-feed-item__body { flex: 1; }
+    .next-steps-row .action-feed-item__desc { margin-bottom: var(--space-md); }
+    .next-steps-row .action-feed-item__btn { align-self: flex-start; }
+    @media (max-width: 900px) { .next-steps-row { grid-template-columns: 1fr; } }
+    .local-tip-card { padding: var(--space-lg); border-radius: var(--radius-card); background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.1); margin-bottom: var(--space-xl); }
+    .local-tip-card h3 { font-size: 0.9rem; margin-bottom: var(--space-sm); color: var(--color-primary); display: flex; align-items: center; gap: var(--space-sm); }
+    .local-tip-card p { font-size: 0.9rem; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+    .skeleton-empty { max-width: 560px; margin-bottom: var(--space-2xl); padding: var(--space-3xl); border-radius: var(--radius-card); background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.1); }
+    .skeleton-empty .skeleton-line { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--color-border) 25%, rgba(26,35,126,0.08) 50%, var(--color-border) 75%); background-size: 200% 100%; animation: skeletonShimmer 1.2s ease-in-out infinite; margin-bottom: var(--space-md); }
+    .skeleton-empty .skeleton-line--title { height: 20px; width: 70%; margin: 0 auto var(--space-xl); }
+    .skeleton-empty .skeleton-line--short { width: 50%; }
+    .skeleton-empty .skeleton-line--btn { height: 44px; width: 140px; margin: var(--space-xl) auto 0; border-radius: var(--radius-btn); }
+    .action-card { max-width: 560px; text-align: center; padding: var(--space-3xl); background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 2px dashed var(--color-border); border-radius: var(--radius-card); margin-bottom: var(--space-2xl); border: 1px solid rgba(255,255,255,0.1); }
+    .action-card.action-card--reveal { animation: actionCardReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes actionCardReveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .action-card h2 { font-size: 1.35rem; margin-bottom: var(--space-md); color: var(--color-primary); }
+    .action-card p { color: var(--color-text-muted); margin-bottom: var(--space-xl); }
+    .task-tracker-list { list-style: none; padding: 0; margin: 0; }
+    .task-tracker-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border); }
+    .task-tracker-item:last-child { border-bottom: none; }
+    .task-tracker-label { display: flex; align-items: center; gap: var(--space-sm); cursor: pointer; flex: 1; min-width: 0; }
+    .task-tracker-checkbox { width: 18px; height: 18px; accent-color: var(--color-accent); cursor: pointer; flex-shrink: 0; }
+    .task-tracker-text { font-size: 0.95rem; color: #1A1A2E; transition: text-decoration 0.2s, color 0.2s; }
+    .task-tracker-item.is-completed .task-tracker-text { text-decoration: line-through; color: #5C5C7A; }
+    .task-tracker-badge { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
+    .task-tracker-badge--upcoming { background: var(--color-border); color: #5C5C7A; }
+    .task-tracker-badge--urgent { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
+    .task-tracker-badge--completed { background: rgba(34, 197, 94, 0.15); color: #16A34A; }
+    .task-tracker-item.is-urgent .task-tracker-badge { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
+    .task-tracker-section-complete { display: none; align-items: center; justify-content: center; gap: var(--space-sm); margin-top: var(--space-md); padding: var(--space-md); background: rgba(34, 197, 94, 0.1); border-radius: var(--radius-md); color: #16A34A; font-weight: 600; font-size: 0.9rem; }
+    .task-tracker-section-complete.is-visible { display: flex; }
+    .task-tracker-section-complete i { font-size: 1.25rem; }
+    .purity-card--tasks .purity-card__title { display: flex; align-items: center; gap: var(--space-sm); }
+    .empty-state__illustration { width: 160px; height: 160px; margin: 0 auto var(--space-xl); opacity: 0.6; }
+    .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-xl); }
+    .resource-card { padding: var(--space-xl); display: flex; align-items: flex-start; gap: var(--space-md); border-radius: var(--radius-card); background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.1); transition: transform 450ms cubic-bezier(0.16,1,0.3,1), box-shadow 450ms cubic-bezier(0.16,1,0.3,1); }
+    .resource-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 128, 128, 0.1); }
+    .resource-card__icon { width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(26,35,126,0.08); border-radius: var(--radius-card); color: var(--color-primary); }
+    .resource-card.resource-card--prioritized { border-left: 4px solid var(--color-accent); }
+    .resource-card h3 { font-size: 1rem; margin-bottom: var(--space-xs); }
+    .resource-card p { font-size: 0.9rem; color: var(--color-text-muted); }
+    .exit-plan-summary .card { margin-bottom: var(--space-md); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.1); }
+    .settings-panel { display: none; }
+    .settings-panel.is-visible { display: block; }
+    .profile-panel { max-width: none; width: 100%; padding-bottom: var(--space-2xl); }
+    .profile-cover { height: 200px; background: linear-gradient(135deg, #008080 0%, #20B2AA 40%, #0d5c5c 100%); border-radius: var(--radius-card) var(--radius-card) 0 0; position: relative; }
+    .profile-cover::after { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); opacity: 0.5; border-radius: var(--radius-card) var(--radius-card) 0 0; }
+    .profile-header-card { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-lg); padding: var(--space-lg) var(--space-xl); margin: -60px var(--space-xl) 0; position: relative; z-index: 2; background: rgba(255,255,255,0.7); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.4); border-radius: var(--radius-card); box-shadow: 0 8px 32px rgba(26,26,46,0.08), 0 2px 8px rgba(0,128,128,0.06); }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #008080, #20B2AA); color: white; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 16px rgba(0,128,128,0.35); }
+    .profile-header__info { flex: 1; min-width: 140px; }
+    .profile-header__name { font-size: 1.35rem; font-weight: 700; color: #1A1A2E; margin: 0 0 var(--space-xs); }
+    .profile-header__email { font-size: 0.9rem; color: #5C5C7A; margin: 0; }
+    .profile-tabs { display: flex; gap: 0; border-radius: var(--radius-md); background: rgba(0,0,0,0.04); padding: 4px; }
+    .profile-tab { padding: var(--space-sm) var(--space-md); border: none; background: transparent; color: #5C5C7A; font-size: 0.9rem; font-weight: 500; cursor: pointer; border-radius: 6px; transition: background 0.25s ease, color 0.25s ease; }
+    .profile-tab:hover { color: #1A1A2E; background: rgba(255,255,255,0.6); }
+    .profile-tab.active { background: #008080; color: white; }
+    .profile-content { padding: var(--space-2xl) var(--space-xl) 0; }
+    .profile-tab-panel { display: none; }
+    .profile-tab-panel.is-visible { display: block; }
+    .profile-card__lead { font-size: 0.95rem; color: #5C5C7A; margin-bottom: var(--space-md); line-height: 1.5; }
+    .profile-simple-list { list-style: none; padding: 0; margin: 0 0 var(--space-lg); }
+    .profile-simple-list li { padding: var(--space-xs) 0; padding-left: 1.25rem; position: relative; color: #1A1A2E; }
+    .profile-simple-list li::before { content: '•'; position: absolute; left: 0; color: var(--color-accent); }
+    .profile-card__muted { font-size: 0.85rem; color: #5C5C7A; margin-top: var(--space-md); }
+    .profile-bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-xl); margin-bottom: var(--space-xl); }
+    .profile-card { padding: var(--space-xl); border-radius: var(--radius-card); }
+    .profile-card--glass { background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 4px 24px rgba(26,26,46,0.06), inset 0 1px 0 rgba(255,255,255,0.5); }
+    .profile-card__title { font-size: 0.95rem; font-weight: 700; color: #1A1A2E; margin-bottom: var(--space-lg); text-transform: uppercase; letter-spacing: 0.04em; }
+    .profile-toggles { display: flex; flex-direction: column; gap: var(--space-md); }
+    .profile-toggle { display: flex; align-items: center; gap: var(--space-md); cursor: pointer; }
+    .profile-toggle__input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .profile-toggle__track { width: 44px; height: 24px; border-radius: 12px; background: var(--color-border); position: relative; transition: background 0.25s ease; flex-shrink: 0; }
+    .profile-toggle__track::after { content: ''; position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: transform 0.25s ease; }
+    .profile-toggle__input:checked + .profile-toggle__track { background: #008080; }
+    .profile-toggle__input:checked + .profile-toggle__track::after { transform: translateX(20px); }
+    .profile-toggle__label { font-size: 0.9rem; color: #5C5C7A; }
+    .profile-dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-xs) var(--space-lg); margin-bottom: var(--space-md); font-size: 0.9rem; }
+    .profile-dl dt { color: #5C5C7A; font-weight: 500; }
+    .profile-dl dd { color: #1A1A2E; margin: 0; }
+    .profile-bio { font-size: 0.85rem; color: #5C5C7A; line-height: 1.5; margin-bottom: var(--space-lg); padding: var(--space-sm) 0; border-top: 1px solid var(--color-border); margin-top: var(--space-sm); }
+    .profile-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+    .profile-form .form-group--full { grid-column: 1 / -1; }
+    .profile-form__hint { color: #5C5C7A; font-weight: 400; }
+    .profile-form { display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-md); }
+    .profile-save-btn { min-height: 52px; padding: 14px 28px; width: 100%; max-width: 320px; font-size: 1rem; font-weight: 600; border-radius: var(--radius-md); margin-top: var(--space-sm); box-shadow: 0 4px 16px rgba(0,128,128,0.25); }
+    .profile-save-btn:hover { box-shadow: 0 8px 24px rgba(0,128,128,0.35); }
+    .profile-advice-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+    .profile-advice-item { display: flex; align-items: flex-start; gap: var(--space-md); }
+    .profile-advice__avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #008080, #20B2AA); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .profile-advice__body strong { display: block; font-size: 0.9rem; color: #1A1A2E; margin-bottom: 2px; }
+    .profile-advice__body p { font-size: 0.8rem; color: #5C5C7A; margin: 0; line-height: 1.4; }
+    .profile-card--table { overflow: hidden; }
+    .profile-strategy-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .profile-strategy-table th { text-align: left; padding: var(--space-md) var(--space-lg); color: #5C5C7A; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--color-border); }
+    .profile-strategy-table td { padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); color: #1A1A2E; }
+    .profile-strategy-table tr:last-child td { border-bottom: none; }
+    .profile-status-badge { display: inline-block; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 600; }
+    .profile-status-badge--online { background: rgba(0,128,128,0.15); color: #008080; }
+    .profile-status-badge--offline { background: rgba(92,92,122,0.2); color: #5C5C7A; }
+    .profile-status-badge--warning { background: rgba(245,158,11,0.2); color: #B45309; }
+    .profile-progress { height: 8px; border-radius: 4px; background: var(--color-border); overflow: hidden; min-width: 80px; max-width: 160px; }
+    .profile-progress__fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #008080, #20B2AA); transition: width 0.4s ease; }
+    .table-wrap { overflow-x: auto; }
+    .main-content { display: block; }
+    .main-content.is-hidden { display: none; }
+    .settings-form { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .settings-form .card { border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); }
+    .settings-form__row, .profile-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+    .settings-form .form-group--full { grid-column: 1 / -1; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: var(--space-sm); font-size: 0.95rem; }
+    .sidebar__toggle { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; background: rgba(255,255,255,0.1); border: none; border-radius: var(--radius-md); color: white; cursor: pointer; margin-bottom: var(--space-lg); transition: background 0.4s ease; flex-shrink: 0; }
+    #sidebar-close { display: none; }
+    .sidebar__toggle:hover { background: rgba(255,255,255,0.2); }
+    .sidebar__toggle i { font-size: 1.25rem; }
+    .main__mobile-header { display: none; }
+    .header__identity { display: flex; flex-direction: column; gap: 2px; }
+    .header__greeting { color: #1A1A2E; font-weight: 600; font-size: 1.1rem; }
+    .header__sub { color: #5C5C7A; font-size: 0.8rem; letter-spacing: 0.5px; margin: 0; }
+    @media (max-width: 900px) {
+      .dashboard-skeleton { grid-template-columns: 1fr; }
+      .activity-feed { order: -1; }
+    }
+    @media (max-width: 768px) {
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-lease { grid-column: span 1; }
+      .bento-next { grid-column: span 1; }
+      .dashboard { flex-direction: column; }
+      .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; z-index: 100; transform: translateX(-100%); transition: transform 0.4s ease; box-shadow: none; }
+      .sidebar.is-open { transform: translateX(0); }
+      .sidebar__overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s ease; }
+      .sidebar__overlay.is-visible { opacity: 1; visibility: visible; }
+      .sidebar__toggle { display: flex; }
+      .main { margin-left: 0; padding-top: var(--space-md); }
+      .main__mobile-header { display: flex; align-items: center; gap: 20px; margin-bottom: var(--space-lg); }
+      .main__mobile-header .sidebar__toggle { display: flex; background: var(--color-primary); color: white; margin-bottom: 0; }
+      #sidebar-open { display: flex !important; }
+      #sidebar-close { display: flex; }
+    }
+    @media (min-width: 769px) { .main__mobile-header { display: none; } }
+    @media (max-width: 600px) { .settings-form__row { grid-template-columns: 1fr; } .profile-form__row { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .profile-bento { grid-template-columns: 1fr; } .profile-header-card { margin-left: var(--space-md); margin-right: var(--space-md); } .profile-content { padding-left: var(--space-md); padding-right: var(--space-md); } }
+  </style>
+</head>
+<body>
+  <div class="sidebar__overlay" id="sidebar-overlay" aria-hidden="true"></div>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <button type="button" class="sidebar__toggle" aria-label="Close menu" id="sidebar-close">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="sidebar__brand">Silent Lease</div>
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-overview active"><i class="fas fa-chart-pie"></i><span class="sidebar__nav-text">Overview</span></a>
+        <a href="#has-quiz-state" class="nav-strategy"><i class="fas fa-map-marked-alt"></i><span class="sidebar__nav-text">My Strategy</span></a>
+        <a href="#templates" class="nav-toolkit"><i class="fas fa-briefcase"></i><span class="sidebar__nav-text">Toolkit</span></a>
+        <a href="#settings" class="nav-profile"><i class="fas fa-user-circle"></i><span class="sidebar__nav-text">Profile</span></a>
+        <a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span class="sidebar__nav-text">Logout</span></a>
+      </nav>
+      <div class="sidebar__help">
+        <div class="sidebar__help-card">
+          <strong>Need help?</strong>
+          <p>Check the Rights Guide or contact support for your exit plan.</p>
+          <a href="#templates" class="btn-accent btn-accent--small">Help</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main dashboard-main">
+      <div class="main__mobile-header">
+        <button type="button" class="sidebar__toggle" aria-label="Open menu" id="sidebar-open" style="display: none;">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="header__identity">
+          <span class="header__greeting">Welcome, <span id="mobile-user-name">User</span></span>
+          <p class="header__sub">Manage your exit plan and access your toolkit.</p>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content" id="main-content">
+        <header class="main__header main__header--command">
+          <div class="main__header-right">
+            <span class="dashboard-date" id="dashboard-date"></span>
+            <span class="live-indicator" id="live-indicator-wrap" aria-label="Session active">
+              <span class="live-pulse" aria-hidden="true"></span>
+              <span class="live-indicator__text">Live</span>
+            </span>
+          </div>
+        </header>
+
+        <!-- Skeleton: per-card blocks (multiple live data streams) -->
+        <div id="dashboard-skeleton" class="dashboard-skeleton-elite">
+          <div class="skeleton-card skeleton-card--lease"></div>
+          <div class="skeleton-card skeleton-card--quick"></div>
+          <div class="skeleton-card skeleton-card--action"></div>
+          <div class="skeleton-card skeleton-card--activity"></div>
+        </div>
+
+        <!-- Purity-style layout (revealed after 1.5s) -->
+        <div id="dashboard-body" class="dashboard-body is-loading dashboard-purity">
+          <!-- 1. Top Stats Row: 4 metric cards -->
+          <div class="stats-row">
+            <div class="metric-card">
+              <div class="metric-card__icon"><i class="fas fa-file-contract"></i></div>
+              <div class="metric-card__content">
+                <span class="metric-card__label">Lease Status</span>
+                <span class="metric-card__value" id="stat-lease">Active</span>
+                <span class="metric-card__trend metric-card__trend--up">On track</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card__icon"><i class="fas fa-calendar-day"></i></div>
+              <div class="metric-card__content">
+                <span class="metric-card__label">Notice Days Left</span>
+                <span class="metric-card__value" id="stat-notice-days"><span id="lease-countdown-days">—</span> <span id="lease-countdown-unit">days</span><span id="lease-countdown-hms" class="sr-only" aria-hidden="true"></span></span>
+                <span class="metric-card__trend" id="stat-notice-trend">—</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card__icon"><i class="fas fa-tasks"></i></div>
+              <div class="metric-card__content">
+                <span class="metric-card__label">Document Progress</span>
+                <span class="metric-card__value" id="stat-completion">0%</span>
+                <span class="metric-card__trend metric-card__trend--up">+5%</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card__icon"><i class="fas fa-list-check"></i></div>
+              <div class="metric-card__content">
+                <span class="metric-card__label">Total Tasks Remaining</span>
+                <span class="metric-card__value" id="stat-tasks-remaining">4</span>
+                <span class="metric-card__trend">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Main two-column grid -->
+          <div class="main-grid">
+            <!-- Left column: Lease Management Table -->
+            <div class="main-grid__left">
+              <div class="purity-card purity-card--table">
+                <h2 class="purity-card__title">Lease Management</h2>
+                <p id="lease-legend-text" class="purity-card__subtitle">Complete your quiz to see notice period progress and move-out countdown.</p>
+                <p id="lease-deadlines-desc" class="purity-card__subtitle purity-card__subtitle--muted" style="display: none;"></p>
+                <div class="lease-timeline purity-card__section">
+                  <div class="lease-timeline__label">Move-out timeline</div>
+                  <div class="lease-timeline__bar">
+                    <div class="lease-timeline__fill" id="lease-timeline-fill"></div>
+                  </div>
+                </div>
+                <div class="lease-circle-wrap" id="lease-health-ring-wrap" aria-hidden="true">
+                  <div class="lease-circle-outer" id="lease-health-ring">
+                    <div class="lease-circle-inner">
+                      <span class="lease-countdown">Progress</span>
+                      <span class="lease-countdown__val" id="lease-ring-pct">0</span>
+                      <span class="lease-countdown__unit">%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table class="lease-table" id="lease-management-table">
+                    <thead>
+                      <tr>
+                        <th>Stage</th>
+                        <th>Status</th>
+                        <th>Timeline</th>
+                        <th>Completion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr data-stage="notice">
+                        <td>Notice Period</td>
+                        <td><span class="lease-table__status" id="lease-status-text">On Track</span></td>
+                        <td id="lease-table-notice-timeline">—</td>
+                        <td><div class="lease-table__progress"><div class="lease-table__progress-fill" id="lease-progress-notice" style="width: 0%"></div></div></td>
+                      </tr>
+                      <tr data-stage="inspection">
+                        <td>Inspection</td>
+                        <td><span class="lease-table__status lease-table__status--upcoming">Upcoming</span></td>
+                        <td>—</td>
+                        <td><div class="lease-table__progress"><div class="lease-table__progress-fill" style="width: 0%"></div></div></td>
+                      </tr>
+                      <tr data-stage="handover">
+                        <td>Handover</td>
+                        <td><span class="lease-table__status lease-table__status--upcoming">Upcoming</span></td>
+                        <td>—</td>
+                        <td><div class="lease-table__progress"><div class="lease-table__progress-fill" style="width: 0%"></div></div></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="purity-card__actions">
+                  <a href="quiz.html" class="btn-primary btn-accent">Update Plan</a>
+                  <button type="button" class="btn-outline-elite" id="btn-add-to-calendar" disabled><i class="fas fa-calendar-plus"></i> Add to Calendar</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column: Activity Feed + Upcoming Deadlines -->
+            <div class="main-grid__right">
+              <div class="purity-card purity-card--feed" id="activity-feed">
+                <h2 class="purity-card__title">
+                  <span class="live-pulse activity-feed__live-dot" aria-hidden="true"></span>
+                  Live Activity
+                </h2>
+                <div class="activity-feed__scroll">
+                  <div class="activity-feed__list" id="activity-feed-list"></div>
+                </div>
+              </div>
+              <div class="purity-card purity-card--tasks" id="task-tracker-card">
+                <h2 class="purity-card__title">Task Tracker</h2>
+                <p class="purity-card__subtitle">Check off items as you complete them. Progress is saved automatically.</p>
+                <ul class="task-tracker-list" id="task-tracker-list">
+                  <li class="task-tracker-item" data-task-id="send-notice">
+                    <label class="task-tracker-label">
+                      <input type="checkbox" class="task-tracker-checkbox" data-task-id="send-notice">
+                      <span class="task-tracker-text">Send notice</span>
+                    </label>
+                    <span class="task-tracker-badge task-tracker-badge--upcoming" data-task-badge="send-notice">Upcoming</span>
+                  </li>
+                  <li class="task-tracker-item" data-task-id="prepare-documents">
+                    <label class="task-tracker-label">
+                      <input type="checkbox" class="task-tracker-checkbox" data-task-id="prepare-documents">
+                      <span class="task-tracker-text">Prepare documents</span>
+                    </label>
+                    <span class="task-tracker-badge task-tracker-badge--upcoming" data-task-badge="prepare-documents">Upcoming</span>
+                  </li>
+                  <li class="task-tracker-item" data-task-id="final-inspection">
+                    <label class="task-tracker-label">
+                      <input type="checkbox" class="task-tracker-checkbox" data-task-id="final-inspection">
+                      <span class="task-tracker-text">Final inspection</span>
+                    </label>
+                    <span class="task-tracker-badge task-tracker-badge--upcoming" data-task-badge="final-inspection">Upcoming</span>
+                  </li>
+                  <li class="task-tracker-item" data-task-id="key-handover">
+                    <label class="task-tracker-label">
+                      <input type="checkbox" class="task-tracker-checkbox" data-task-id="key-handover">
+                      <span class="task-tracker-text">Key handover</span>
+                    </label>
+                    <span class="task-tracker-badge task-tracker-badge--upcoming" data-task-badge="key-handover">Upcoming</span>
+                  </li>
+                </ul>
+                <div class="task-tracker-section-complete" id="task-section-complete" aria-hidden="true">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Section complete</span>
+                </div>
+              </div>
+              <div class="purity-card purity-card--deadlines">
+                <h2 class="purity-card__title">Upcoming Deadlines</h2>
+                <ul class="deadlines-list" id="deadlines-list">
+                  <li class="deadlines-list__item">
+                    <span class="deadlines-list__badge deadlines-list__badge--high">High</span>
+                    <span class="deadlines-list__label">Send notice</span>
+                    <span class="deadlines-list__date" id="deadline-notice">—</span>
+                  </li>
+                  <li class="deadlines-list__item">
+                    <span class="deadlines-list__badge deadlines-list__badge--medium">Medium</span>
+                    <span class="deadlines-list__label">Move-out date</span>
+                    <span class="deadlines-list__date" id="deadline-moveout">—</span>
+                  </li>
+                  <li class="deadlines-list__item">
+                    <span class="deadlines-list__badge deadlines-list__badge--low">Low</span>
+                    <span class="deadlines-list__label">Final inspection</span>
+                    <span class="deadlines-list__date">—</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Steps: row of 3 steps under Lease Management -->
+          <section class="next-steps-section" id="live-action-feed" style="display: none;" aria-labelledby="next-steps-heading">
+            <h2 id="next-steps-heading" class="next-steps-section__title">Next Steps</h2>
+            <div class="next-steps-row" id="live-action-feed-list"></div>
+          </section>
+
+          <!-- Lease Insights (compact row) -->
+          <section class="purity-section" aria-labelledby="insights-heading">
+            <h2 id="insights-heading" class="section-title">Lease Insights</h2>
+            <div class="lease-insights" id="lease-insights">
+              <div class="insight-card purity-card purity-card--insight">
+                <h4><i class="fas fa-map-marker-alt"></i> <span id="insight-1-title">Local tip</span></h4>
+                <p id="insight-1-body">Complete your profile and quiz to see tips for your city and situation.</p>
+                <a href="#templates" class="insight-action-link">Action <i class="fas fa-arrow-right"></i></a>
+              </div>
+              <div class="insight-card purity-card purity-card--insight">
+                <h4><i class="fas fa-user-graduate"></i> <span id="insight-2-title">For you</span></h4>
+                <p id="insight-2-body">Personalized guidance based on your occupation and lease details.</p>
+                <a href="#templates" class="insight-action-link">Action <i class="fas fa-arrow-right"></i></a>
+              </div>
+              <div class="insight-card purity-card purity-card--insight">
+                <h4><i class="fas fa-shield-alt"></i> <span id="insight-3-title">Rights</span></h4>
+                <p id="insight-3-body">Know your tenant rights before sending notice — check the Rights Guide.</p>
+                <a href="#templates" class="insight-action-link">Action <i class="fas fa-arrow-right"></i></a>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Skeleton loader (shows first when no quiz), then transitions to Start Quiz -->
+        <div id="skeleton-empty" class="skeleton-empty" style="display: none;">
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-line--btn"></div>
+        </div>
+        <!-- State: No quiz — full-width Hero CTA Card -->
+        <div id="no-quiz-state" class="no-quiz-hero" style="display: none;">
+          <div class="no-quiz-hero__inner">
+            <div class="no-quiz-hero__visual">
+              <div class="no-quiz-hero__icon-wrap" aria-hidden="true">
+                <svg class="no-quiz-hero__illustration" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="60" cy="60" r="52" fill="url(#no-quiz-glow)" opacity="0.4"/>
+                  <path d="M60 28L92 48v44L60 112 28 92V48L60 28z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+                  <path d="M60 48v64M28 68l32 20 32-20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="60" cy="60" r="10" fill="currentColor" opacity="0.9"/>
+                  <defs>
+                    <radialGradient id="no-quiz-glow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#008080"/>
+                      <stop offset="100%" stop-color="transparent"/>
+                    </radialGradient>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+            <div class="no-quiz-hero__content">
+              <h2 class="no-quiz-hero__title">You have not started your exit plan yet</h2>
+              <p class="no-quiz-hero__desc">Answer five quick questions to receive your custom toolkit — notice letters, checklists, and step-by-step guidance.</p>
+              <a href="quiz.html" class="no-quiz-hero__btn">
+                <span>Start Quiz</span>
+                <i class="fas fa-arrow-right no-quiz-hero__btn-arrow"></i>
+              </a>
+              <div class="no-quiz-hero__benefits">
+                <span class="no-quiz-hero__tag"><i class="fas fa-file-alt"></i> Ready-to-use Templates</span>
+                <span class="no-quiz-hero__tag"><i class="fas fa-clock"></i> 5-Minute Process</span>
+                <span class="no-quiz-hero__tag"><i class="fas fa-shield-alt"></i> Legal Clarity</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- State: Has quiz data — 3-column Strategy grid + glass card -->
+        <div id="has-quiz-state" class="strategy-section" style="display: none;">
+          <div class="strategy-card">
+            <i class="fas fa-chess strategy-card__watermark" aria-hidden="true"></i>
+            <h2 class="strategy-card__title">My Strategy</h2>
+            <div class="strategy-grid">
+              <div class="strategy-col strategy-col--status">
+                <h3 class="strategy-col__label">Status</h3>
+                <div class="strategy-badges">
+                  <div class="strategy-badge-wrap">
+                    <span class="strategy-badge__label">Lease Reason</span>
+                    <span class="strategy-badge" id="strategy-reason">—</span>
+                  </div>
+                  <div class="strategy-badge-wrap">
+                    <span class="strategy-badge__label">Landlord Status</span>
+                    <span class="strategy-badge" id="strategy-landlord">—</span>
+                  </div>
+                  <div class="strategy-badge-wrap">
+                    <span class="strategy-badge__label">Occupation</span>
+                    <span class="strategy-badge" id="strategy-occupation">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="strategy-col strategy-col--timeline">
+                <h3 class="strategy-col__label">Timeline</h3>
+                <div class="strategy-date" id="strategy-moveout-date">—</div>
+                <div class="strategy-countdown">
+                  <span class="strategy-countdown__val" id="strategy-days-remaining">—</span>
+                  <span class="strategy-countdown__unit">days remaining</span>
+                </div>
+              </div>
+              <div class="strategy-col strategy-col--location">
+                <h3 class="strategy-col__label">Location</h3>
+                <div class="strategy-location">
+                  <i class="fas fa-map-marker-alt strategy-location__icon"></i>
+                  <span id="strategy-location">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="strategy-actions">
+              <a href="quiz.html" class="btn-primary btn-accent">Edit Details</a>
+              <button type="button" class="btn-outline-elite" id="btn-generate-pdf"><i class="fas fa-file-pdf"></i> Generate PDF Report</button>
+            </div>
+          </div>
+        </div>
+
+        <section id="templates" class="purity-section" aria-labelledby="resources-heading">
+          <h2 id="resources-heading" class="section-title">Resources</h2>
+          <div class="purity-card purity-card--resources">
+            <div class="table-wrap">
+              <table class="resources-table" id="resource-grid">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Completion Rate</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-resource="student">
+                    <td><i class="fas fa-graduation-cap resources-table__icon"></i> Student Housing Guide</td>
+                    <td>
+                      <div class="resources-table__progress">
+                        <div class="resources-table__bar"><div class="resources-table__progress-fill" style="width: var(--resource-progress, 0%)"></div></div>
+                        <span class="resources-table__progress-label">0% complete</span>
+                      </div>
+                    </td>
+                    <td><a href="#" class="btn-accent btn-accent--small resource-action" data-action="download">Download PDF</a></td>
+                  </tr>
+                  <tr data-resource="notice">
+                    <td><i class="fas fa-envelope-open-text resources-table__icon"></i> Notice Letter Template</td>
+                    <td>
+                      <div class="resources-table__progress">
+                        <div class="resources-table__bar"><div class="resources-table__progress-fill" style="width: var(--resource-progress, 0%)"></div></div>
+                        <span class="resources-table__progress-label">0% complete</span>
+                      </div>
+                    </td>
+                    <td><a href="#" class="btn-accent btn-accent--small resource-action" data-action="copy">Copy Template</a></td>
+                  </tr>
+                  <tr data-resource="cleaning">
+                    <td><i class="fas fa-broom resources-table__icon"></i> Cleaning Checklist</td>
+                    <td>
+                      <div class="resources-table__progress">
+                        <div class="resources-table__bar"><div class="resources-table__progress-fill" style="width: var(--resource-progress, 0%)"></div></div>
+                        <span class="resources-table__progress-label">0% complete</span>
+                      </div>
+                    </td>
+                    <td><a href="#" class="btn-accent btn-accent--small resource-action" data-action="download">Download PDF</a></td>
+                  </tr>
+                  <tr data-resource="rights">
+                    <td><i class="fas fa-file-pdf resources-table__icon"></i> Tenant Rights Guide</td>
+                    <td>
+                      <div class="resources-table__progress">
+                        <div class="resources-table__bar"><div class="resources-table__progress-fill" style="width: var(--resource-progress, 0%)"></div></div>
+                        <span class="resources-table__progress-label">0% complete</span>
+                      </div>
+                    </td>
+                    <td><a href="#" class="btn-accent btn-accent--small resource-action" data-action="download">Download PDF</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Profile Panel — Purity-style -->
+      <div class="settings-panel profile-panel" id="settings-panel">
+        <div class="profile-cover"></div>
+        <div class="profile-header-card">
+          <div class="profile-avatar" id="profile-avatar">U</div>
+          <div class="profile-header__info">
+            <h1 class="profile-header__name" id="profile-header-name">User</h1>
+            <p class="profile-header__email" id="profile-header-email">user@example.com</p>
+          </div>
+          <nav class="profile-tabs" aria-label="Profile sections">
+            <button type="button" class="profile-tab active" data-tab="overview">Overview</button>
+            <button type="button" class="profile-tab" data-tab="teams">Teams</button>
+            <button type="button" class="profile-tab" data-tab="projects">Projects</button>
+            <button type="button" class="profile-tab" data-tab="terms">Terms</button>
+          </nav>
+        </div>
+
+        <div class="profile-content">
+          <div id="profile-panel-overview" class="profile-tab-panel is-visible">
+          <div class="profile-bento">
+            <div class="profile-card profile-card--glass">
+              <h2 class="profile-card__title">Platform Settings</h2>
+              <div class="profile-toggles">
+                <label class="profile-toggle">
+                  <input type="checkbox" id="settings-email-notify" class="profile-toggle__input" checked>
+                  <span class="profile-toggle__track"></span>
+                  <span class="profile-toggle__label">Email on update</span>
+                </label>
+                <label class="profile-toggle">
+                  <input type="checkbox" id="settings-sms-alerts" class="profile-toggle__input">
+                  <span class="profile-toggle__track"></span>
+                  <span class="profile-toggle__label">SMS alerts</span>
+                </label>
+              </div>
+            </div>
+            <div class="profile-card profile-card--glass">
+              <h2 class="profile-card__title">Profile Information</h2>
+              <dl class="profile-dl">
+                <dt>Full Name</dt>
+                <dd id="profile-dl-name">—</dd>
+                <dt>Phone</dt>
+                <dd id="profile-dl-phone">—</dd>
+                <dt>Location</dt>
+                <dd id="profile-dl-address">—</dd>
+                <dt>Occupation</dt>
+                <dd id="profile-dl-occupation">—</dd>
+              </dl>
+              <p class="profile-bio" id="profile-bio">Update your profile to add a short bio.</p>
+              <form id="settings-form" class="settings-form profile-form">
+                <div class="profile-form__row">
+                  <div class="form-group">
+                    <label for="settings-name">Full Name</label>
+                    <input type="text" id="settings-name" class="form-input" autocomplete="name">
+                  </div>
+                  <div class="form-group">
+                    <label for="settings-email">Email</label>
+                    <input type="email" id="settings-email" class="form-input" autocomplete="email" required>
+                    <span class="error-msg" id="settings-email-error"></span>
+                  </div>
+                </div>
+                <div class="profile-form__row">
+                  <div class="form-group">
+                    <label for="settings-phone">Phone</label>
+                    <input type="tel" id="settings-phone" class="form-input" placeholder="(555) 123-4567" autocomplete="tel">
+                    <span class="error-msg" id="settings-phone-error"></span>
+                  </div>
+                  <div class="form-group">
+                    <label for="settings-occupation">Occupation</label>
+                    <select id="settings-occupation" class="form-input">
+                      <option value="">Select...</option>
+                      <option value="Student">Student</option>
+                      <option value="Professional">Professional</option>
+                      <option value="Entrepreneur">Entrepreneur</option>
+                      <option value="Retired">Retired</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group form-group--full">
+                  <label for="settings-address">Current Address</label>
+                  <input type="text" id="settings-address" class="form-input" autocomplete="street-address">
+                </div>
+                <div class="form-group form-group--full">
+                  <label for="settings-password">New Password <span class="profile-form__hint">(leave blank to keep current)</span></label>
+                  <input type="password" id="settings-password" class="form-input" placeholder="Min. 8 characters" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn-primary btn-accent profile-save-btn">Save Changes</button>
+              </form>
+            </div>
+            <div class="profile-card profile-card--glass">
+              <h2 class="profile-card__title">Recent Advice</h2>
+              <ul class="profile-advice-list">
+                <li class="profile-advice-item">
+                  <span class="profile-advice__avatar">A</span>
+                  <div class="profile-advice__body">
+                    <strong>Send notice on time</strong>
+                    <p>Submit your notice within the required period for your province.</p>
+                  </div>
+                </li>
+                <li class="profile-advice-item">
+                  <span class="profile-advice__avatar">B</span>
+                  <div class="profile-advice__body">
+                    <strong>Keep records</strong>
+                    <p>Use traceable delivery for your notice letter.</p>
+                  </div>
+                </li>
+                <li class="profile-advice-item">
+                  <span class="profile-advice__avatar">C</span>
+                  <div class="profile-advice__body">
+                    <strong>Final inspection</strong>
+                    <p>Schedule a walk-through before key handover.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="profile-card profile-card--glass profile-card--table">
+            <h2 class="profile-card__title">Strategy Status</h2>
+            <div class="table-wrap">
+              <table class="profile-strategy-table">
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-profile-row="notice">
+                    <td>Notice Period</td>
+                    <td><span class="profile-status-badge" id="profile-strategy-notice-status">—</span></td>
+                    <td><div class="profile-progress"><div class="profile-progress__fill" id="profile-strategy-notice-progress" style="width: 0%"></div></div></td>
+                  </tr>
+                  <tr data-profile-row="documents">
+                    <td>Document Status</td>
+                    <td><span class="profile-status-badge" id="profile-strategy-doc-status">—</span></td>
+                    <td><div class="profile-progress"><div class="profile-progress__fill" id="profile-strategy-doc-progress" style="width: 0%"></div></div></td>
+                  </tr>
+                  <tr data-profile-row="landlord">
+                    <td>Landlord Communication</td>
+                    <td><span class="profile-status-badge" id="profile-strategy-landlord-status">—</span></td>
+                    <td><div class="profile-progress"><div class="profile-progress__fill" id="profile-strategy-landlord-progress" style="width: 0%"></div></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          </div>
+
+          <div id="profile-panel-teams" class="profile-tab-panel" aria-hidden="true">
+            <div class="profile-card profile-card--glass">
+              <h2 class="profile-card__title"><i class="fas fa-users"></i> Teams</h2>
+              <p class="profile-card__lead">Invite others to collaborate on your exit plan or share access with a roommate or advisor.</p>
+              <ul class="profile-simple-list">
+                <li>Share your dashboard view (read-only) with a family member</li>
+                <li>Add a co-tenant to track tasks together</li>
+                <li>Invite a legal or housing advisor</li>
+              </ul>
+              <p class="profile-card__muted">Team features are coming soon. For now, you can share your PDF reports from the Toolkit.</p>
+            </div>
+          </div>
+
+          <div id="profile-panel-projects" class="profile-tab-panel" aria-hidden="true">
+            <div class="profile-card profile-card--glass">
+              <h2 class="profile-card__title"><i class="fas fa-folder-open"></i> Projects</h2>
+              <p class="profile-card__lead">Your exit plan is your current project. Track notice period, documents, and move-out steps in one place.</p>
+              <ul class="profile-simple-list">
+                <li><strong>Notice letter</strong> — Template and send date</li>
+                <li><strong>Cleaning & inspection</strong> — Checklist and scheduling</li>
+                <li><strong>Key handover</strong> — Final date and deposit return</li>
+              </ul>
+              <a href="#has-quiz-state" class="btn-primary btn-accent">View My Strategy</a>
+            </div>
+          </div>
+
+          <div id="profile-panel-terms" class="profile-tab-panel" aria-hidden="true">
+            <div class="profile-card profile-card--glass">
+              <h2 class="profile-card__title"><i class="fas fa-file-contract"></i> Terms of Service</h2>
+              <p class="profile-card__lead">By using Silent Lease you agree to use this tool for personal guidance only. We are not a law firm and do not provide legal advice.</p>
+              <ul class="profile-simple-list">
+                <li>This app helps you organize your lease exit steps and templates.</li>
+                <li>Laws vary by province — always confirm notice periods and procedures with your tenancy board or a lawyer.</li>
+                <li>We do not store sensitive documents on our servers; your data stays in your browser unless you choose to share it.</li>
+              </ul>
+              <p class="profile-card__muted">Last updated: 2026. For full terms, contact support@silentlease.example.com.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="animations.js"></script>
+  <script>
+    (function() {
+      var user = requireAuth();
+      if (!user) return;
+
+      var mobileName = document.getElementById('mobile-user-name');
+      if (mobileName) mobileName.textContent = user.name || 'User';
+
+      // Dashboard date (top right)
+      var dateEl = document.getElementById('dashboard-date');
+      if (dateEl) {
+        var d = new Date();
+        dateEl.textContent = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      // Mobile sidebar
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebar-overlay');
+      var openBtn = document.getElementById('sidebar-open');
+      var closeBtn = document.getElementById('sidebar-close');
+      function openSidebar() {
+        if (sidebar) sidebar.classList.add('is-open');
+        if (overlay) { overlay.classList.add('is-visible'); overlay.setAttribute('aria-hidden', 'false'); }
+        document.body.style.overflow = 'hidden';
+      }
+      function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('is-open');
+        if (overlay) { overlay.classList.remove('is-visible'); overlay.setAttribute('aria-hidden', 'true'); }
+        document.body.style.overflow = '';
+      }
+      if (openBtn) openBtn.addEventListener('click', openSidebar);
+      if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+      if (overlay) overlay.addEventListener('click', closeSidebar);
+
+      function setActiveNav(activeLink) {
+        document.querySelectorAll('.sidebar__nav a:not(#logout-link)').forEach(function(a) {
+          a.classList.toggle('active', a === activeLink);
+        });
+      }
+      function getStrategyTargetId() {
+        var app = typeof getAppState === 'function' ? getAppState() : {};
+          return (app && app.isPlanGenerated) ? 'has-quiz-state' : 'no-quiz-state';
+      }
+      function scrollToHashTarget(hash) {
+        var h = (hash || window.location.hash).replace(/^#/, '');
+        if (!h) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        var el = document.getElementById(h);
+        if (el) {
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+          });
+        }
+      }
+      function handleNavClick(e) {
+        var link = e.currentTarget;
+        if (link.id === 'logout-link') return;
+        closeSidebar();
+        e.preventDefault();
+        var href = link.getAttribute('href') || '';
+        if (href === '#settings') {
+          window.location.hash = 'settings';
+          setActiveNav(link);
+          return;
+        }
+        if (href === 'dashboard.html' || href === '' || href === '#') {
+          window.location.hash = '';
+          return;
+        }
+        if (href.indexOf('#') === 0) {
+          var id = href.slice(1);
+          var targetId = id;
+          if (id === 'has-quiz-state') targetId = getStrategyTargetId();
+          window.location.hash = targetId;
+          showMain();
+          var active = link.classList.contains('nav-strategy') ? document.querySelector('.nav-strategy')
+            : link.classList.contains('nav-toolkit') ? document.querySelector('.nav-toolkit')
+            : document.querySelector('.nav-overview');
+          setActiveNav(active);
+          scrollToHashTarget('#' + targetId);
+          return;
+        }
+        setActiveNav(link);
+      }
+      document.querySelectorAll('.sidebar__nav a').forEach(function(a) {
+        a.addEventListener('click', handleNavClick);
+      });
+
+      // Profile tabs (Overview / Teams / Projects / Terms) — show corresponding panel
+      document.querySelectorAll('.profile-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var tab = this.getAttribute('data-tab');
+          document.querySelectorAll('.profile-tab').forEach(function(b) { b.classList.remove('active'); });
+          this.classList.add('active');
+          document.querySelectorAll('.profile-tab-panel').forEach(function(panel) {
+            var isMatch = panel.id === 'profile-panel-' + tab;
+            panel.classList.toggle('is-visible', isMatch);
+            panel.setAttribute('aria-hidden', isMatch ? 'false' : 'true');
+          });
+        });
+      });
+
+      // Logout
+      document.getElementById('logout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+        window.location.href = 'index.html';
+      });
+
+      // Critical Deadlines: Add to Calendar / Set Reminder (stub — can wire to calendar API later)
+      var btnCal = document.getElementById('btn-add-to-calendar');
+      var btnReminder = document.getElementById('btn-set-reminder');
+      if (btnCal) btnCal.addEventListener('click', function() {
+        if (this.disabled) return;
+        if (typeof showToast === 'function') showToast('Calendar link ready. Connect your calendar in Settings.', 'success');
+      });
+      if (btnReminder) btnReminder.addEventListener('click', function() {
+        if (typeof showToast === 'function') showToast('Reminder set for your notice deadline.', 'success');
+      });
+
+      // Quick Actions: Contact Support
+      var quickSupport = document.getElementById('quick-contact-support');
+      if (quickSupport) quickSupport.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (typeof showToast === 'function') showToast('Support: support@silentlease.example.com', 'success');
+      });
+      // Strategy: Generate PDF (stub)
+      var btnPdf = document.getElementById('btn-generate-pdf');
+      if (btnPdf) btnPdf.addEventListener('click', function() {
+        if (typeof showToast === 'function') showToast('PDF report generated. Check your downloads.', 'success');
+      });
+
+      // Settings / Main toggle
+      function showSettings() {
+        document.getElementById('main-content').classList.add('is-hidden');
+        document.getElementById('settings-panel').classList.add('is-visible');
+        setActiveNav(document.querySelector('.nav-profile'));
+        populateSettingsForm();
+        if (typeof updateProfileStrategyTable === 'function') updateProfileStrategyTable();
+      }
+      function showMain() {
+        document.getElementById('main-content').classList.remove('is-hidden');
+        document.getElementById('settings-panel').classList.remove('is-visible');
+        var hash = window.location.hash;
+        var active = document.querySelector('.nav-overview');
+        if (hash === '#templates') active = document.querySelector('.nav-toolkit');
+        else if (hash === '#has-quiz-state' || hash === '#no-quiz-state') active = document.querySelector('.nav-strategy');
+        setActiveNav(active);
+      }
+      function populateSettingsForm() {
+        var u = getCurrentUser();
+        if (u) {
+          document.getElementById('settings-name').value = u.name || '';
+          document.getElementById('settings-email').value = u.email || '';
+          document.getElementById('settings-phone').value = u.phone || '';
+          document.getElementById('settings-address').value = u.address || '';
+          document.getElementById('settings-occupation').value = u.occupation || '';
+          var name = u.name || 'User';
+          var email = u.email || '';
+          document.getElementById('profile-header-name').textContent = name;
+          document.getElementById('profile-header-email').textContent = email || '—';
+          var initials = (name.split(' ').map(function(w) { return w[0]; }).join('') || 'U').slice(0, 2).toUpperCase();
+          document.getElementById('profile-avatar').textContent = initials;
+          document.getElementById('profile-dl-name').textContent = name || '—';
+          document.getElementById('profile-dl-phone').textContent = u.phone || '—';
+          document.getElementById('profile-dl-address').textContent = u.address || '—';
+          document.getElementById('profile-dl-occupation').textContent = u.occupation || '—';
+        }
+      }
+      function checkHash() {
+        var hash = window.location.hash;
+        if (hash === '#settings') {
+          showSettings();
+          return;
+        }
+        showMain();
+        var h = hash.replace(/^#/, '');
+        if (h === 'templates' || h === 'has-quiz-state' || h === 'no-quiz-state') {
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              var el = document.getElementById(h);
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+          });
+        } else if (!h) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+      window.addEventListener('hashchange', checkHash);
+      checkHash();
+
+      // Settings form submit
+      document.getElementById('settings-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var emailErr = document.getElementById('settings-email-error');
+        var phoneErr = document.getElementById('settings-phone-error');
+        emailErr.textContent = '';
+        phoneErr.textContent = '';
+        var updates = {
+          name: document.getElementById('settings-name').value.trim(),
+          email: document.getElementById('settings-email').value.trim(),
+          phone: document.getElementById('settings-phone').value.trim(),
+          address: document.getElementById('settings-address').value.trim(),
+          occupation: document.getElementById('settings-occupation').value || '',
+          password: document.getElementById('settings-password').value || undefined
+        };
+        if (updates.password && updates.password.length < 8) updates.password = undefined;
+        var result = updateUserProfile(updates);
+        if (result.success) {
+          if (typeof showNotification === 'function') showNotification('Profile updated successfully.', 'success');
+          var mobileNameEl = document.getElementById('mobile-user-name');
+          if (mobileNameEl) mobileNameEl.textContent = updates.name || 'User';
+          document.getElementById('settings-password').value = '';
+          document.getElementById('profile-header-name').textContent = updates.name || 'User';
+          document.getElementById('profile-header-email').textContent = updates.email || '—';
+          var initials = ((updates.name || 'User').split(' ').map(function(w) { return w[0]; }).join('') || 'U').slice(0, 2).toUpperCase();
+          document.getElementById('profile-avatar').textContent = initials;
+          document.getElementById('profile-dl-name').textContent = updates.name || '—';
+          document.getElementById('profile-dl-phone').textContent = updates.phone || '—';
+          document.getElementById('profile-dl-address').textContent = updates.address || '—';
+          document.getElementById('profile-dl-occupation').textContent = updates.occupation || '—';
+          populateSettingsForm();
+        } else {
+          showToast(result.error, 'error');
+          if (result.error.includes('email')) emailErr.textContent = result.error;
+          if (result.error.includes('phone')) phoneErr.textContent = result.error;
+        }
+      });
+
+      // Skeleton: exactly 1.5s on every refresh (simulate live data fetch)
+      var skeletonEl = document.getElementById('dashboard-skeleton');
+      var bodyEl = document.getElementById('dashboard-body');
+      var SKELETON_MS = 1500;
+      if (skeletonEl && bodyEl) {
+        bodyEl.classList.add('is-loading');
+        setTimeout(function() {
+          skeletonEl.classList.add('skeleton-out');
+          setTimeout(function() {
+            skeletonEl.style.display = 'none';
+            bodyEl.classList.remove('is-loading');
+            bodyEl.classList.add('is-ready');
+          }, 460);
+        }, SKELETON_MS);
+      }
+
+      // Lease Progress: conic gradient circle + live countdown (days, hours, minutes)
+      function getNoticeDays(noticePeriod) {
+        var np = (noticePeriod || '').toLowerCase();
+        if (np.indexOf('30-60') !== -1) return 45;
+        if (np.indexOf('60+') !== -1) return 60;
+        return 30;
+      }
+      function updateLeaseHealth(data) {
+        var legendEl = document.getElementById('lease-legend-text');
+        var pct = 0;
+        if (data && data.moveOutDate && data.noticePeriod) {
+          var moveOut = new Date(data.moveOutDate);
+          var now = new Date();
+          var daysLeft = Math.ceil((moveOut - now) / (1000 * 60 * 60 * 24));
+          if (daysLeft < 0) daysLeft = 0;
+          var noticeDays = getNoticeDays(data.noticePeriod);
+          var daysElapsed = noticeDays - daysLeft;
+          if (noticeDays > 0 && daysElapsed > 0) pct = Math.min(100, (daysElapsed / noticeDays) * 100);
+          if (legendEl) legendEl.textContent = (pct | 0) + '% of your notice period completed. Move-out countdown below.';
+          var descEl = document.getElementById('lease-deadlines-desc');
+          var btnCal = document.getElementById('btn-add-to-calendar');
+          if (descEl) { descEl.textContent = 'Notice due by ' + new Date(moveOut.getTime() - noticeDays * 24 * 60 * 60 * 1000).toLocaleDateString() + '; move-out ' + moveOut.toLocaleDateString() + '.'; descEl.style.display = 'block'; }
+          if (btnCal) btnCal.removeAttribute('disabled');
+          var noticeDeadline = new Date(moveOut.getTime() - noticeDays * 24 * 60 * 60 * 1000);
+          var daysUntilNotice = Math.ceil((noticeDeadline - now) / (1000 * 60 * 60 * 24));
+          var milestoneEl = document.getElementById('lease-milestone-text');
+          var timelineEl = document.getElementById('lease-table-notice-timeline');
+          if (timelineEl) timelineEl.textContent = daysUntilNotice <= 0 ? 'Notice due — send as soon as possible' : 'Send Notice in ' + daysUntilNotice + ' day' + (daysUntilNotice === 1 ? '' : 's');
+          var statusEl = document.getElementById('lease-status-text');
+          if (statusEl) statusEl.textContent = daysUntilNotice > 7 ? 'On Track' : (daysUntilNotice > 0 ? 'Due Soon' : 'Action Required');
+          var progressNotice = document.getElementById('lease-progress-notice');
+          if (progressNotice) progressNotice.style.width = Math.min(100, (pct || 0)) + '%';
+        } else {
+          if (legendEl) legendEl.textContent = 'Complete your quiz to see notice period progress and move-out countdown.';
+          var descEl = document.getElementById('lease-deadlines-desc');
+          var btnCal = document.getElementById('btn-add-to-calendar');
+          if (descEl) { descEl.textContent = 'Add your move-out date in the quiz to see key dates.'; descEl.style.display = 'none'; }
+          if (btnCal) btnCal.setAttribute('disabled', 'disabled');
+          var timelineEl = document.getElementById('lease-table-notice-timeline');
+          if (timelineEl) timelineEl.textContent = '—';
+          var statusEl = document.getElementById('lease-status-text');
+          if (statusEl) statusEl.textContent = 'On Track';
+        }
+      }
+      function updateProfileStrategyTable() {
+        var data = typeof getExitPlanData === 'function' ? getExitPlanData() : null;
+        var tasks = typeof getTasks === 'function' ? getTasks() : {};
+        var taskIds = ['send-notice', 'prepare-documents', 'final-inspection', 'key-handover'];
+        var completedTasks = taskIds.filter(function(id) { return tasks[id]; }).length;
+        var docPct = taskIds.length ? Math.round((completedTasks / taskIds.length) * 100) : 0;
+        var noticeStatusEl = document.getElementById('profile-strategy-notice-status');
+        var noticeProgressEl = document.getElementById('profile-strategy-notice-progress');
+        var docStatusEl = document.getElementById('profile-strategy-doc-status');
+        var docProgressEl = document.getElementById('profile-strategy-doc-progress');
+        var landlordStatusEl = document.getElementById('profile-strategy-landlord-status');
+        var landlordProgressEl = document.getElementById('profile-strategy-landlord-progress');
+        if (noticeStatusEl && noticeProgressEl) {
+          if (data && data.moveOutDate && data.noticePeriod) {
+            var moveOut = new Date(data.moveOutDate);
+            var now = new Date();
+            var noticeDays = getNoticeDays(data.noticePeriod);
+            var noticeDeadline = new Date(moveOut.getTime() - noticeDays * 24 * 60 * 60 * 1000);
+            var daysUntilNotice = Math.ceil((noticeDeadline - now) / (1000 * 60 * 60 * 24));
+            var daysLeft = Math.ceil((moveOut - now) / (1000 * 60 * 60 * 24));
+            if (daysLeft < 0) daysLeft = 0;
+            var daysElapsed = noticeDays - daysLeft;
+            var pct = (noticeDays > 0 && daysElapsed > 0) ? Math.min(100, (daysElapsed / noticeDays) * 100) : 0;
+            var statusText = daysUntilNotice > 7 ? 'On track' : (daysUntilNotice > 0 ? 'Due Soon' : 'Action Required');
+            noticeStatusEl.textContent = statusText;
+            noticeStatusEl.className = 'profile-status-badge ' + (daysUntilNotice > 7 ? 'profile-status-badge--online' : (daysUntilNotice > 0 ? 'profile-status-badge--warning' : 'profile-status-badge--offline'));
+            noticeProgressEl.style.width = Math.min(100, pct) + '%';
+          } else {
+            noticeStatusEl.textContent = '—';
+            noticeStatusEl.className = 'profile-status-badge';
+            noticeProgressEl.style.width = '0%';
+          }
+        }
+        if (docStatusEl && docProgressEl) {
+          var docStatusText = docPct === 0 ? 'Pending' : (docPct >= 100 ? 'Complete' : 'In progress');
+          docStatusEl.textContent = docStatusText;
+          docStatusEl.className = 'profile-status-badge ' + (docPct >= 100 ? 'profile-status-badge--online' : (docPct > 0 ? 'profile-status-badge--warning' : 'profile-status-badge--offline'));
+          docProgressEl.style.width = docPct + '%';
+        }
+        if (landlordStatusEl && landlordProgressEl) {
+          if (data && data.landlordRelation) {
+            landlordStatusEl.textContent = data.landlordRelation;
+            landlordStatusEl.className = 'profile-status-badge ' + (data.landlordRelation === 'Difficult' ? 'profile-status-badge--offline' : 'profile-status-badge--online');
+            landlordProgressEl.style.width = '100%';
+          } else {
+            landlordStatusEl.textContent = '—';
+            landlordStatusEl.className = 'profile-status-badge';
+            landlordProgressEl.style.width = '0%';
+          }
+        }
+      }
+      var countdownInterval;
+      function startCountdown(moveOutDate) {
+        function pad(n) { return n < 10 ? '0' + n : n; }
+        function update() {
+          var now = new Date();
+          var end = new Date(moveOutDate);
+          if (end <= now) {
+            document.getElementById('lease-countdown-days').textContent = '0';
+            document.getElementById('lease-countdown-unit').textContent = 'days';
+            document.getElementById('lease-countdown-hms').textContent = 'Move-out date passed';
+            if (countdownInterval) clearInterval(countdownInterval);
+            return;
+          }
+          var diff = end - now;
+          var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          var h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          var m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          document.getElementById('lease-countdown-days').textContent = days;
+          document.getElementById('lease-countdown-unit').textContent = days === 1 ? 'day' : 'days';
+          document.getElementById('lease-countdown-hms').textContent = pad(h) + 'h ' + pad(m) + 'm';
+        }
+        update();
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(update, 60000);
+      }
+      function stopCountdown() {
+        document.getElementById('lease-countdown-days').textContent = '—';
+        document.getElementById('lease-countdown-unit').textContent = 'days';
+        document.getElementById('lease-countdown-hms').textContent = '—';
+        if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+      }
+
+      // Live Action Feed: Priority Badges + Action Buttons
+      function renderLiveActionFeed(data) {
+        var feed = document.getElementById('live-action-feed');
+        var list = document.getElementById('live-action-feed-list');
+        if (!feed || !list) return;
+        var items = [];
+        if (data && data.landlordRelation === 'Difficult') {
+          items.push({ priority: 'high', title: 'Legal Protection Tip', body: 'Keep copies of all written communication and send notice by traceable method.', cta: 'View tips', href: '#templates' });
+        }
+        items.push({ priority: 'normal', title: 'Review Your Toolkit', body: 'Download your notice letter template and tailor it with your move-out date.', cta: 'Open', href: '#templates' });
+        items.push({ priority: 'normal', title: 'Send Notice', body: 'Submit your notice within the required period for your province.', cta: 'Guide', href: '#templates' });
+        items.push({ priority: 'normal', title: 'Prepare for Move-out', body: 'Use the cleaning checklist and schedule your final inspection.', cta: 'Checklist', href: '#templates' });
+        list.innerHTML = items.map(function(item) {
+          var badgeClass = item.priority === 'high' ? 'action-feed-item__priority--high' : 'action-feed-item__priority--normal';
+          var priorityIcon = item.priority === 'high' ? '<i class="fas fa-exclamation-circle action-feed-item__icon action-feed-item__icon--high" aria-hidden="true"></i>' : '<i class="fas fa-arrow-right action-feed-item__icon action-feed-item__icon--normal" aria-hidden="true"></i>';
+          return '<div class="action-feed-item">' +
+            '<span class="action-feed-item__priority ' + badgeClass + '">' + priorityIcon + (item.priority === 'high' ? ' Priority' : ' Step') + '</span>' +
+            '<div class="action-feed-item__body">' +
+            '<div class="action-feed-item__title">' + item.title + '</div>' +
+            '<p class="action-feed-item__desc">' + item.body + '</p>' +
+            '</div>' +
+            '<a href="' + (item.href || '#') + '" class="action-feed-item__btn ' + (item.priority === 'high' ? 'btn-accent' : '') + '">' + item.cta + '</a>' +
+            '</div>';
+        }).join('');
+        feed.style.display = 'block';
+      }
+
+      // Vertical Live Activity Feed: timestamp, Verified badge, descriptive sentence
+      function renderActivityFeed(currentStep, noticeDays) {
+        currentStep = currentStep || 1;
+        noticeDays = noticeDays || 60;
+        var feed = document.getElementById('activity-feed');
+        var list = document.getElementById('activity-feed-list');
+        if (!feed || !list) return;
+        var steps = [
+          { title: 'Quiz Complete', num: 1, statusPill: 'Verified', desc: 'Step 1: Quiz data analyzed. Your profile and move-out intent recorded.' },
+          { title: 'Review Toolkit', num: 2, statusPill: 'Live', desc: 'Step 2: Recommendation: ' + noticeDays + '-day notice required. Review templates and checklist.' },
+          { title: 'Send Notice', num: 3, statusPill: 'Due Soon', desc: 'Step 3: Submit your notice within the required period for your province.' },
+          { title: 'Move Out', num: 4, statusPill: 'Scheduled', desc: 'Step 4: Final inspection and key return. Use the cleaning checklist.' }
+        ];
+        function formatTime(d) {
+          var h = d.getHours(); var m = d.getMinutes();
+          return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+        }
+        var now = new Date();
+        list.innerHTML = steps.map(function(s, i) {
+          var state = 'upcoming';
+          var badge = 'Upcoming';
+          if (i + 1 < currentStep) { state = 'done'; badge = 'Completed'; }
+          else if (i + 1 === currentStep) { state = 'current'; badge = 'In Progress'; }
+          var icon = state === 'done' ? '<i class="fas fa-check"></i>' : (s.num);
+          var pillClass = state === 'done' ? 'activity-feed__pill--verified' : (state === 'current' ? 'activity-feed__pill--urgent' : 'activity-feed__pill--upcoming');
+          var pillLabel = state === 'done' ? 'Verified' : (state === 'current' ? 'Live' : s.statusPill);
+          var timeStr = formatTime(now);
+          var verifiedBadge = state === 'done' ? '<span class="activity-feed__verified">Verified</span>' : '';
+          return '<div class="activity-feed__item ' + state + '">' +
+            '<div class="activity-feed__item-dot">' + icon + '</div>' +
+            '<div class="activity-feed__item-body">' +
+            '<div class="activity-feed__item-meta">' +
+            '<span class="activity-feed__time">' + timeStr + '</span>' + verifiedBadge +
+            '</div>' +
+            '<div class="activity-feed__item-title">' + s.title + '</div>' +
+            '<p class="activity-feed__item-desc">' + s.desc + '</p>' +
+            '<div class="activity-feed__pills">' +
+            '<span class="activity-feed__badge activity-feed__badge--' + state + '">' + badge + '</span>' +
+            '<span class="activity-feed__pill ' + pillClass + '">' + pillLabel + '</span>' +
+            '</div></div></div>';
+        }).join('');
+        feed.style.display = 'block';
+      }
+
+      // Resource progress and optional row reorder for table layout
+      function applyResourcePersonalization(reason, occupation) {
+        var grid = document.getElementById('resource-grid');
+        if (!grid) return;
+        var rows = [].slice.call(grid.querySelectorAll('tbody tr[data-resource]'));
+        if (reason === 'Financial') {
+          var rights = rows.filter(function(r) { return r.getAttribute('data-resource') === 'rights'; })[0];
+          if (rights && grid.tBodies[0]) grid.tBodies[0].insertBefore(rights, grid.tBodies[0].firstChild);
+        }
+        if (occupation === 'Student') {
+          var studentRow = rows.filter(function(r) { return r.getAttribute('data-resource') === 'student'; })[0];
+          if (studentRow && grid.tBodies[0]) grid.tBodies[0].insertBefore(studentRow, grid.tBodies[0].firstChild);
+        }
+      }
+
+      // Centralized: load app state and drive visibility from isPlanGenerated
+        function loadAppData() {
+          var app = typeof getAppState === 'function' ? getAppState() : {};
+          if (app.isPlanGenerated && app.exitPlanData) {
+            return { hasPlan: true, data: app.exitPlanData };
+          }
+          return { hasPlan: false, data: null };
+        }
+
+      // Quiz state, stats, and content (run after skeleton hides at 1.5s)
+      function initDashboardContent() {
+        var appLoad = loadAppData();
+        var quizData = appLoad.hasPlan && appLoad.data ? JSON.stringify(appLoad.data) : null;
+        var noQuizEl = document.getElementById('no-quiz-state');
+        var hasQuizEl = document.getElementById('has-quiz-state');
+        var skeletonEmptyEl = document.getElementById('skeleton-empty');
+        var user = getCurrentUser();
+
+        // Live indicator: show green dot when user is logged in (always visible at top)
+        var liveWrap = document.getElementById('live-indicator-wrap');
+        if (liveWrap) {
+          liveWrap.style.display = user ? '' : 'none';
+        }
+
+        function updateStats(data) {
+          var tasks = typeof getTasks === 'function' ? getTasks() : {};
+          var taskIds = ['send-notice', 'prepare-documents', 'final-inspection', 'key-handover'];
+          var completed = taskIds.filter(function(id) { return tasks[id]; }).length;
+          var total = taskIds.length;
+          var pct = total ? Math.round((completed / total) * 100) : 0;
+          document.getElementById('stat-completion').textContent = pct + '%';
+          var tasksEl = document.getElementById('stat-tasks-remaining');
+          if (tasksEl) tasksEl.textContent = String(total - completed);
+          var ringWrap = document.getElementById('lease-health-ring-wrap');
+          var ringEl = document.getElementById('lease-health-ring');
+          var ringPct = document.getElementById('lease-ring-pct');
+          if (ringEl) ringEl.style.setProperty('--circle-deg', (pct / 100) * 360 + 'deg');
+          if (ringPct) ringPct.textContent = pct;
+          if (ringWrap) { ringWrap.style.display = 'block'; ringWrap.setAttribute('aria-hidden', 'false'); }
+          updateLeaseHealth(data);
+          if (typeof updateProfileStrategyTable === 'function') updateProfileStrategyTable();
+          if (data && data.moveOutDate) {
+            startCountdown(data.moveOutDate);
+            updateMoveOutTimeline(data);
+            var noticeDays = getNoticeDays(data.noticePeriod);
+            var moveOut = new Date(data.moveOutDate);
+            var noticeDeadline = new Date(moveOut.getTime() - noticeDays * 24 * 60 * 60 * 1000);
+            var dn = document.getElementById('deadline-notice');
+            var dm = document.getElementById('deadline-moveout');
+            if (dn) dn.textContent = noticeDeadline.toLocaleDateString();
+            if (dm) dm.textContent = moveOut.toLocaleDateString();
+          } else {
+            stopCountdown();
+            var fill = document.getElementById('lease-timeline-fill');
+            if (fill) fill.style.setProperty('width', '0%');
+          }
+        }
+        function updateMoveOutTimeline(data) {
+          var fill = document.getElementById('lease-timeline-fill');
+          if (!fill || !data || !data.moveOutDate) return;
+          var moveOut = new Date(data.moveOutDate);
+          var now = new Date();
+          var total = moveOut - now;
+          var noticeMs = getNoticeDays(data.noticePeriod) * 24 * 60 * 60 * 1000;
+          var start = new Date(moveOut.getTime() - noticeMs);
+          var elapsed = now - start;
+          var pct = total <= 0 ? 100 : (elapsed <= 0 ? 0 : Math.min(100, (elapsed / noticeMs) * 100));
+          fill.style.setProperty('width', pct + '%');
+        }
+
+        if (quizData) {
+          noQuizEl.style.display = 'none';
+          hasQuizEl.style.display = 'block';
+          try {
+            var data = JSON.parse(quizData);
+            var reasonEl = document.getElementById('strategy-reason');
+            var landlordEl = document.getElementById('strategy-landlord');
+            var moveoutEl = document.getElementById('strategy-moveout-date');
+            var daysEl = document.getElementById('strategy-days-remaining');
+            var locationEl = document.getElementById('strategy-location');
+            if (reasonEl) reasonEl.textContent = data.reason || '—';
+            if (landlordEl) landlordEl.textContent = data.landlordRelation || '—';
+            var occEl = document.getElementById('strategy-occupation');
+            if (occEl) occEl.textContent = (user && user.occupation) ? user.occupation : '—';
+            if (locationEl) locationEl.textContent = data.cityProvince || '—';
+            if (data.moveOutDate) {
+              var moveOut = new Date(data.moveOutDate);
+              if (moveoutEl) moveoutEl.textContent = moveOut.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+              function updateStrategyDays() {
+                var now = new Date();
+                var days = Math.ceil((moveOut - now) / (1000 * 60 * 60 * 24));
+                if (daysEl) daysEl.textContent = days < 0 ? 0 : days;
+              }
+              updateStrategyDays();
+              setInterval(updateStrategyDays, 60000);
+            } else {
+              if (moveoutEl) moveoutEl.textContent = '—';
+              if (daysEl) daysEl.textContent = '—';
+            }
+            updateStats(data);
+            renderLiveActionFeed(data);
+            renderActivityFeed(2, data.noticePeriod ? getNoticeDays(data.noticePeriod) : 60);
+            applyResourcePersonalization(data.reason, user && user.occupation ? user.occupation : '');
+          } catch (e) {
+            noQuizEl.style.display = 'block';
+            hasQuizEl.style.display = 'none';
+            updateStats(null);
+            stopCountdown();
+          }
+        } else {
+          hasQuizEl.style.display = 'none';
+          document.getElementById('activity-feed').style.display = 'none';
+          updateStats(null);
+          stopCountdown();
+          var occEl = document.getElementById('strategy-occupation');
+          if (occEl) occEl.textContent = (user && user.occupation) ? user.occupation : '—';
+          if (skeletonEmptyEl) {
+            skeletonEmptyEl.style.display = 'block';
+            setTimeout(function() {
+              skeletonEmptyEl.style.display = 'none';
+              noQuizEl.style.display = 'block';
+              noQuizEl.classList.add('no-quiz-hero--reveal');
+            }, 900);
+          } else {
+            noQuizEl.style.display = 'block';
+          }
+        }
+        initTaskTracker();
+
+        function initTaskTracker() {
+          var taskIds = ['send-notice', 'prepare-documents', 'final-inspection', 'key-handover'];
+          var list = document.getElementById('task-tracker-list');
+          var sectionComplete = document.getElementById('task-section-complete');
+          if (!list || typeof getTasks !== 'function' || typeof saveTasks !== 'function') return;
+
+          function refreshTaskUI() {
+            var tasks = getTasks();
+            var daysLeft = typeof getDaysUntilMoveOut === 'function' ? getDaysUntilMoveOut() : null;
+            var sendNoticeUrgent = (daysLeft !== null && daysLeft <= 60);
+            list.querySelectorAll('.task-tracker-item').forEach(function(li) {
+              var taskId = li.getAttribute('data-task-id');
+              var cb = li.querySelector('.task-tracker-checkbox');
+              var badge = li.querySelector('.task-tracker-badge');
+              if (!cb || !badge) return;
+              var done = !!tasks[taskId];
+              cb.checked = done;
+              li.classList.toggle('is-completed', done);
+              if (taskId === 'send-notice' && !done && sendNoticeUrgent) {
+                li.classList.add('is-urgent');
+                badge.textContent = 'Urgent';
+                badge.className = 'task-tracker-badge task-tracker-badge--urgent';
+              } else {
+                li.classList.remove('is-urgent');
+                if (done) {
+                  badge.textContent = 'Completed';
+                  badge.className = 'task-tracker-badge task-tracker-badge--completed';
+                } else {
+                  badge.textContent = 'Upcoming';
+                  badge.className = 'task-tracker-badge task-tracker-badge--upcoming';
+                }
+              }
+            });
+            var completed = taskIds.filter(function(id) { return tasks[id]; }).length;
+            if (sectionComplete) {
+              sectionComplete.classList.toggle('is-visible', completed === taskIds.length);
+              sectionComplete.setAttribute('aria-hidden', completed === taskIds.length ? 'false' : 'true');
+            }
+            if (typeof updateStats === 'function') updateStats(getExitPlanData ? getExitPlanData() : null);
+            var liveWrap = document.getElementById('live-indicator-wrap');
+            if (liveWrap && typeof getCurrentUser === 'function') {
+              liveWrap.style.display = getCurrentUser() ? '' : 'none';
+            }
+          }
+
+          list.querySelectorAll('.task-tracker-checkbox').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+              var taskId = this.getAttribute('data-task-id');
+              var tasks = getTasks();
+              var wasCompleted = !!tasks[taskId];
+              tasks[taskId] = this.checked;
+              saveTasks(tasks);
+              if (typeof saveAppState === 'function') saveAppState({ completedTasks: tasks });
+              if (this.checked && !wasCompleted && typeof showNotification === 'function') showNotification('Task completed', 'success');
+              refreshTaskUI();
+            });
+          });
+          refreshTaskUI();
+        }
+
+        // Lease Insights: 3 personalized tips (city + occupation)
+        var quiz = quizData ? (function() { try { return JSON.parse(quizData); } catch(e) { return null; } })() : null;
+        var city = quiz && quiz.cityProvince ? quiz.cityProvince : '';
+        var occ = user && user.occupation ? user.occupation : '';
+        if (typeof getLocalTenantTip === 'function') {
+          var tip = getLocalTenantTip(occ, city);
+          if (tip) {
+            document.getElementById('insight-1-title').textContent = tip.title;
+            document.getElementById('insight-1-body').textContent = tip.body;
+          }
+        }
+        if (occ === 'Student') {
+          document.getElementById('insight-2-title').textContent = 'For students';
+          document.getElementById('insight-2-body').textContent = 'Check the Student Housing Guide first — sublet and assignment rules vary by province.';
+        }
+        // Resource progress (read/downloaded) from localStorage — per user, so new accounts start at 0%
+        var progressKey = 'silentlease_resource_progress' + (typeof getStorageSuffix === 'function' ? getStorageSuffix() : '');
+        function getResourceProgress() {
+          try {
+            return JSON.parse(localStorage.getItem(progressKey) || '{}');
+          } catch (e) { return {}; }
+        }
+        function setResourceProgress(key, pct) {
+          var progress = getResourceProgress();
+          progress[key] = Math.min(100, Math.max(0, pct));
+          try { localStorage.setItem(progressKey, JSON.stringify(progress)); } catch (e) {}
+        }
+        function updateResourceRowUI(row) {
+          var key = row.getAttribute('data-resource');
+          var pct = getResourceProgress()[key] || 0;
+          row.style.setProperty('--resource-progress', pct + '%');
+          var fill = row.querySelector('.resources-table__progress-fill');
+          var label = row.querySelector('.resources-table__progress-label');
+          if (fill) fill.style.width = pct + '%';
+          if (label) label.textContent = pct >= 100 ? '100% complete' : (pct + '% complete');
+        }
+        try {
+          document.querySelectorAll('#resource-grid tbody tr[data-resource]').forEach(updateResourceRowUI);
+        } catch (e) {}
+
+        // Resource actions: click on Download PDF / Copy Template
+        document.getElementById('resource-grid').addEventListener('click', function(e) {
+          var link = e.target.closest('.resource-action');
+          if (!link) return;
+          e.preventDefault();
+          var row = link.closest('tr[data-resource]');
+          var resource = row ? row.getAttribute('data-resource') : '';
+          var action = link.getAttribute('data-action') || 'download';
+          if (action === 'copy' && resource === 'notice') {
+            var noticeTemplate = 'To: [Landlord name and address]\n\nDate: [Today\'s date]\n\nRe: Notice to end my tenancy\n\nI am writing to give you notice that I will be ending my tenancy on [Move-out date]. This notice is provided in accordance with the requirements of my lease and applicable tenancy law.\n\nPlease confirm receipt and advise of any next steps (e.g. final inspection, key return).\n\nSincerely,\n[Your name]\n[Your phone and email]';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(noticeTemplate).then(function() {
+                setResourceProgress('notice', 100);
+                updateResourceRowUI(row);
+                if (typeof showNotification === 'function') showNotification('Notice letter template copied to clipboard.', 'success');
+              }).catch(function() {
+                if (typeof showToast === 'function') showToast('Copy failed. Try selecting the template manually.', 'error');
+              });
+            } else {
+              setResourceProgress('notice', 100);
+              updateResourceRowUI(row);
+              if (typeof showNotification === 'function') showNotification('Template ready. Use the printable version from the Toolkit.', 'success');
+            }
+            return;
+          }
+          if (action === 'download') {
+            var filename = '';
+            var JsPDF = typeof jspdf !== 'undefined' ? jspdf.jsPDF : null;
+            if (JsPDF) {
+              var doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+              var margin = 22;
+              var y = margin;
+              var pageW = doc.internal.pageSize.getWidth();
+              var pageH = doc.internal.pageSize.getHeight();
+              var maxW = pageW - margin * 2;
+              var colorTitle = [26, 35, 126];
+              var colorSubtitle = [92, 92, 122];
+              var colorHeading = [0, 128, 128];
+              var logoHeight = 32;
+              var boxPaddingTop = 6;
+              var boxPaddingBottom = 8;
+              function addLogoHeader() {
+                doc.setFillColor(colorHeading[0], colorHeading[1], colorHeading[2]);
+                doc.rect(0, 0, pageW, logoHeight, 'F');
+                var cx = pageW / 2;
+                var logoY = boxPaddingTop + 5;
+                doc.setDrawColor(255, 255, 255);
+                doc.setLineWidth(0.8);
+                doc.setFillColor(255, 255, 255);
+                doc.circle(cx, logoY, 4, 'FD');
+                doc.setTextColor(colorHeading[0], colorHeading[1], colorHeading[2]);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('SL', cx, logoY + 1.2, { align: 'center' });
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Silent Lease', cx, logoY + 12, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(220, 255, 255);
+                doc.text('Exit your lease early — without stress, fines, or confusion.', cx, logoY + 18, { align: 'center' });
+                doc.setTextColor(0, 0, 0);
+                y = logoHeight + 14;
+              }
+              function addTitle(title, subtitle) {
+                doc.setFontSize(26);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(colorTitle[0], colorTitle[1], colorTitle[2]);
+                doc.text(title, margin, y);
+                y += 12;
+                if (subtitle) {
+                  doc.setFontSize(13);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(colorSubtitle[0], colorSubtitle[1], colorSubtitle[2]);
+                  doc.text(subtitle, margin, y);
+                  y += 10;
+                }
+                doc.setTextColor(0, 0, 0);
+                y += 8;
+              }
+              function addPageHeader() {
+                doc.setFillColor(colorHeading[0], colorHeading[1], colorHeading[2]);
+                doc.rect(0, 0, pageW, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Silent Lease', pageW / 2, 6.5, { align: 'center' });
+                doc.setTextColor(0, 0, 0);
+                y = 10 + margin;
+              }
+              function addSection(heading, lines) {
+                if (y > pageH - 40) { doc.addPage(); addPageHeader(); }
+                doc.setFontSize(15);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(colorHeading[0], colorHeading[1], colorHeading[2]);
+                doc.text(heading, margin, y);
+                y += 9;
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                lines.forEach(function(line) {
+                  if (y > pageH - 25) { doc.addPage(); addPageHeader(); }
+                  doc.text(line, margin, y);
+                  y += 7;
+                });
+                y += 6;
+              }
+              if (resource === 'student') {
+                filename = 'Student-Housing-Guide.pdf';
+                addLogoHeader();
+                addTitle('Student Housing Guide', 'Practical tips for students ending a lease early');
+                addSection('1. Sublets and assignments', [
+                  'Rules vary by province. In Ontario, you can request to assign your lease to another person. Assignment means a new tenant takes over your lease entirely.',
+                  'If the landlord unreasonably refuses a suitable assignee, you may be able to give 30 days\' notice to end the tenancy. Keep any refusal in writing.',
+                  'In Quebec and other provinces, rules differ. Check your provincial tenancy authority or the Régie du logement for local rules.',
+                  'Subletting is when you leave temporarily and someone else pays rent; the lease stays in your name. Both sublets and assignments often need landlord consent.'
+                ]);
+                addSection('2. Your lease and notice', [
+                  'Review your lease for sublet and assignment clauses. Some leases require landlord consent; get any agreement in writing.',
+                  'Check the required notice period for your province (e.g. 30 days, 60 days) and give notice in the correct form and by the deadline.',
+                  'Send notice by a traceable method (registered mail, email with read receipt) and keep a copy for your records.'
+                ]);
+                addSection('3. Campus and student resources', [
+                  'Use your school\'s off-campus housing office for guidance. Many universities and colleges offer free resources for tenant issues.',
+                  'Student unions often offer free legal clinics for tenancy questions. Take advantage of these before signing or ending a lease.',
+                  'Keep all communication with the landlord in writing. This protects you if there is a dispute later.',
+                  'If you are in residence, different rules may apply; check with your institution.'
+                ]);
+                addSection('4. Moving out and deposits', [
+                  'Leave the unit in the condition required by your lease (subject to normal wear and tear). A move-out cleaning checklist can help.',
+                  'Request a final inspection and get the landlord\'s sign-off if possible. This can help with deposit return.',
+                  'Your landlord must return your deposit (or balance) within the timeframe set by your province\'s law.'
+                ]);
+                addSection('5. Financial and timing tips', [
+                  'Plan your move-out date to align with your lease end or notice period. Giving notice late can mean extra rent or legal complications.',
+                  'Budget for moving costs, possible last month\'s rent, and any fees stated in your lease. Some provinces limit what landlords can charge.',
+                  'If you paid a security or damage deposit, ensure you have the landlord\'s contact details and know the deadline and process for return.'
+                ]);
+                addSection('6. Where to get help', [
+                  'Your provincial tenancy board or housing authority publishes guides, forms, and contact information. Start there for official rules.',
+                  'Campus legal clinics and community legal aid offices often help tenants for free or low cost. Book early as demand can be high.',
+                  'Keep this guide with your lease and notice documents. Refer back to it as you complete each step toward a smooth move-out.'
+                ]);
+              } else if (resource === 'cleaning') {
+                filename = 'Move-Out-Cleaning-Checklist.pdf';
+                addLogoHeader();
+                addTitle('Move-out Cleaning Checklist', 'Use this list before key handover to help get your deposit back');
+                addSection('Kitchen', [
+                  'Clean inside oven: remove racks, wipe interior, replace racks. Use oven cleaner if needed.',
+                  'Clean inside microwave: wipe interior and door. Remove any splatters.',
+                  'Clean refrigerator and freezer: defrost if needed, wipe shelves and drawers, leave door open if power will be off.',
+                  'Wipe all counters, backsplash, and exterior of cabinets.',
+                  'Clean inside cupboards: remove items, wipe shelves, and leave empty or as agreed.',
+                  'Empty and wipe under the sink. Check for leaks.',
+                  'Sweep and mop the kitchen floor. Pay attention to corners and under appliances if movable.'
+                ]);
+                addSection('Bathroom', [
+                  'Scrub toilet inside and out, including base and behind.',
+                  'Clean sink, taps, and counter. Wipe mirror and any shelves.',
+                  'Scrub tub and/or shower: tiles, grout, and doors or curtain.',
+                  'Wipe cabinets and remove all personal items. Clean medicine cabinet.',
+                  'Sweep and mop the bathroom floor.'
+                ]);
+                addSection('Bedrooms and living areas', [
+                  'Vacuum all carpets and rugs. Consider a steam clean if the lease requires it.',
+                  'Mop hard floors. Remove any marks or sticky residue.',
+                  'Dust shelves, window sills, and baseboards.',
+                  'Remove marks from walls. Fill small nail holes with filler if required by your lease; repaint only if specified.'
+                ]);
+                addSection('Windows and doors', [
+                  'Clean windows inside and on the sill. Clean tracks if applicable.',
+                  'Wipe door handles and any visible scuffs on doors.',
+                  'Ensure all keys and access fobs are collected and ready for return.'
+                ]);
+                addSection('Final steps', [
+                  'Remove all personal items, furniture, garbage, and recycling. Do not leave anything unless agreed in writing.',
+                  'Take photos or video of the unit after cleaning for your records.',
+                  'Schedule a final walk-through with the landlord if possible and note the condition on a move-out form.',
+                  'Return keys and fobs by the date and method specified in your lease or notice.'
+                ]);
+                addSection('Tips for a smooth handover', [
+                  'Start cleaning a few days before move-out so you are not rushed. Focus on one room at a time and check off each item.',
+                  'If the lease requires professional carpet cleaning or pest treatment, book it in advance and keep receipts.',
+                  'Leave contact information for the landlord in case they need to reach you about the deposit or final bills.',
+                  'A clean, well-maintained unit can support a full deposit return and a positive reference for future rentals.'
+                ]);
+              } else if (resource === 'rights') {
+                filename = 'Tenant-Rights-Guide.pdf';
+                addLogoHeader();
+                addTitle('Tenant Rights Guide', 'Know your rights when ending a tenancy');
+                addSection('1. Your right to a habitable home', [
+                  'You have the right to live in a unit that meets health and safety standards. Landlords must maintain the property and make necessary repairs.',
+                  'If serious repairs are not done, you may have options such as rent reduction or ending the tenancy, depending on your province. Contact your tenancy board before withholding rent.',
+                  'You have the right to give proper notice to end your tenancy in accordance with your lease and provincial law.'
+                ]);
+                addSection('2. Fees and deposits', [
+                  'Landlords cannot charge illegal fees. In Ontario, key deposits cannot exceed the cost of replacing the key; landlords cannot charge fees for sublet or assignment.',
+                  'Security or damage deposits are regulated by province. Some provinces limit or prohibit them; others require they be held in a specific way.',
+                  'You have the right to receive receipts for rent and for any deposit. You have the right to have your deposit returned according to law, minus lawful deductions.'
+                ]);
+                addSection('3. Notice and paperwork', [
+                  'Give notice in the form and timeframe required by your province (e.g. written notice, 30 or 60 days). Keep a copy and use traceable delivery.',
+                  'Keep copies of your lease, all notices, and written communication with the landlord. This helps if there is a dispute about dates, payments, or condition.'
+                ]);
+                addSection('4. Disputes and provincial boards', [
+                  'Provincial tenancy boards (or equivalent) provide free information and dispute resolution. Use their guides and forms when possible.',
+                  'If you believe your rights are violated, contact your provincial board before withholding rent or taking other action. Wrongful action can complicate your situation.',
+                  'Many provinces offer mediation or hearings. Document everything and respond to any notices from the landlord or board within the required time.'
+                ]);
+                addSection('5. End of tenancy', [
+                  'You must leave the unit in the condition required by your lease (normal wear and tear allowed). A cleaning checklist can help you meet expectations.',
+                  'Arrange a final inspection if possible and get a move-out report. This can support a full deposit return.',
+                  'If your landlord wrongfully keeps your deposit, you can file with your tenancy board to recover it.'
+                ]);
+                addSection('6. Privacy and access', [
+                  'Landlords must usually give notice before entering (e.g. 24 hours in Ontario), except in emergencies. Check your province\'s rules.',
+                  'You have the right to quiet enjoyment. If the landlord or others enter without proper notice or reason, document it and contact your tenancy board.',
+                  'Your lease may allow the landlord to show the unit to prospective tenants near the end of your tenancy; notice requirements still apply.'
+                ]);
+                addSection('7. Summary and next steps', [
+                  'Knowing your rights helps you give proper notice, protect your deposit, and resolve disputes. Use official forms and keep everything in writing.',
+                  'When in doubt, contact your provincial tenancy board or get advice from a legal clinic. Acting early can prevent bigger problems later.',
+                  'Silent Lease provides templates and checklists to support you. Combine this guide with our Notice Letter Template and Cleaning Checklist for a complete exit plan.'
+                ]);
+              } else {
+                filename = 'Resource.pdf';
+                addLogoHeader();
+                addTitle('Resource', 'Silent Lease');
+                addSection('Content', ['This resource was generated from your Silent Lease dashboard.']);
+              }
+              var numPages = doc.internal.getNumberOfPages();
+              for (var p = 1; p <= numPages; p++) {
+                doc.setPage(p);
+                doc.setFontSize(9);
+                doc.setTextColor(120, 120, 120);
+                doc.text('Silent Lease — Exit your lease early without stress.', margin, pageH - 10);
+                doc.text('Page ' + p + ' of ' + numPages, pageW - margin - 20, pageH - 10);
+                doc.setTextColor(0, 0, 0);
+              }
+              doc.save(filename);
+              setResourceProgress(resource, 100);
+              if (row) updateResourceRowUI(row);
+              if (typeof showNotification === 'function') showNotification('PDF downloaded: ' + filename, 'success');
+            } else {
+              var fallback = resource === 'student' ? 'Student-Housing-Guide' : resource === 'cleaning' ? 'Cleaning-Checklist' : resource === 'rights' ? 'Tenant-Rights-Guide' : 'Resource';
+              var content = fallback + ' — Silent Lease. Download again when the PDF library is loaded.';
+              var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.href = url;
+              a.download = fallback + '.txt';
+              a.style.display = 'none';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              setResourceProgress(resource, 100);
+              if (row) updateResourceRowUI(row);
+              if (typeof showNotification === 'function') showNotification('Download started.', 'success');
+            }
+          }
+        });
+
+        // Per-card skeleton: reveal each card with stagger (multiple live streams)
+        var cards = document.querySelectorAll('.dashboard-card');
+        cards.forEach(function(card, i) {
+          setTimeout(function() {
+            card.classList.add('card-loaded');
+          }, 100 + i * 120);
+        });
+      }
+      setTimeout(initDashboardContent, SKELETON_MS);
+    })();
+  </script>
+</body>
+</html>

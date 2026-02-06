@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exit Plan Quiz — Silent Lease</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .quiz-page { min-height: 100vh; background: #F5F5F7; padding: var(--space-2xl); display: flex; flex-direction: column; align-items: center; }
+    .quiz-container { max-width: 560px; width: 100%; }
+    .quiz-header { text-align: center; margin-bottom: var(--space-2xl); }
+    .quiz-header h1 { font-size: 1.5rem; color: var(--color-primary); margin-bottom: var(--space-md); }
+    .progress-bar { height: 6px; background: var(--color-border); border-radius: var(--radius-pill); overflow: hidden; margin-bottom: var(--space-2xl); }
+    .progress-bar__fill { height: 100%; background: linear-gradient(90deg, var(--color-accent), var(--color-primary)); border-radius: var(--radius-pill); transition: width 0.4s ease-in-out; }
+    .quiz-card { background: white; border-radius: var(--radius-card); box-shadow: var(--shadow-floating); padding: var(--space-2xl); min-height: 280px; }
+    .quiz-step { display: none; animation: fadeIn 0.4s ease-in-out; }
+    .quiz-step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .quiz-step h2 { font-size: 1.2rem; margin-bottom: var(--space-lg); color: var(--color-text); }
+    .quiz-options { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .quiz-option { padding: var(--space-md) var(--space-lg); border: 2px solid var(--color-border); border-radius: var(--radius-card); cursor: pointer; transition: all 0.4s ease-in-out; display: flex; align-items: center; gap: var(--space-md); }
+    .quiz-option:hover { border-color: var(--color-accent-light); background: rgba(0,128,128,0.06); transform: translateX(4px); }
+    .quiz-option:active { transform: scale(0.98); }
+    .quiz-option.selected { border-color: var(--color-accent); background: rgba(0,128,128,0.08); }
+    .quiz-option input { display: none; }
+    .quiz-input-row { margin-top: var(--space-md); }
+    .quiz-input-row .form-input { margin-top: var(--space-sm); }
+    .quiz-actions { margin-top: var(--space-xl); display: flex; gap: var(--space-md); justify-content: space-between; }
+    .quiz-actions .btn-primary { min-width: 120px; }
+    .back-link { display: inline-flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-lg); color: var(--color-text-muted); font-size: 0.95rem; }
+    .back-link:hover { color: var(--color-primary); }
+  </style>
+</head>
+<body>
+  <div class="quiz-page">
+    <div class="quiz-container">
+      <a href="dashboard.html" class="back-link"><span>←</span> Back to Dashboard</a>
+
+      <header class="quiz-header">
+        <h1>Your Exit Plan</h1>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progress-fill" style="width: 20%;"></div>
+        </div>
+      </header>
+
+      <div class="quiz-card">
+        <form id="quiz-form" action="https://formspree.io/f/mlgwrazj" method="POST">
+          <!-- Q1 -->
+          <div class="quiz-step active" data-step="1">
+            <h2>1. What is your primary reason for leaving?</h2>
+            <div class="quiz-options">
+              <label class="quiz-option" data-value="Work">
+                <input type="radio" name="reason" value="Work">
+                <i class="fas fa-briefcase"></i> Work
+              </label>
+              <label class="quiz-option" data-value="Study">
+                <input type="radio" name="reason" value="Study">
+                <i class="fas fa-graduation-cap"></i> Study
+              </label>
+              <label class="quiz-option" data-value="Financial">
+                <input type="radio" name="reason" value="Financial">
+                <i class="fas fa-wallet"></i> Financial
+              </label>
+              <label class="quiz-option" data-value="Personal">
+                <input type="radio" name="reason" value="Personal">
+                <i class="fas fa-user"></i> Personal
+              </label>
+            </div>
+          </div>
+
+          <!-- Q2 -->
+          <div class="quiz-step" data-step="2">
+            <h2>2. What is your relationship with the landlord?</h2>
+            <div class="quiz-options">
+              <label class="quiz-option" data-value="Good">
+                <input type="radio" name="landlordRelation" value="Good">
+                <i class="fas fa-smile"></i> Good
+              </label>
+              <label class="quiz-option" data-value="Neutral">
+                <input type="radio" name="landlordRelation" value="Neutral">
+                <i class="fas fa-meh"></i> Neutral
+              </label>
+              <label class="quiz-option" data-value="Difficult">
+                <input type="radio" name="landlordRelation" value="Difficult">
+                <i class="fas fa-frown"></i> Difficult
+              </label>
+            </div>
+          </div>
+
+          <!-- Q3 -->
+          <div class="quiz-step" data-step="3">
+            <h2>3. How much notice can you give?</h2>
+            <div class="quiz-options">
+              <label class="quiz-option" data-value="Less than 30 days">
+                <input type="radio" name="noticePeriod" value="Less than 30 days">
+                Less than 30 days
+              </label>
+              <label class="quiz-option" data-value="30-60 days">
+                <input type="radio" name="noticePeriod" value="30-60 days">
+                30-60 days
+              </label>
+              <label class="quiz-option" data-value="60+ days">
+                <input type="radio" name="noticePeriod" value="60+ days">
+                60+ days
+              </label>
+            </div>
+          </div>
+
+          <!-- Q4 -->
+          <div class="quiz-step" data-step="4">
+            <h2>4. What is your current city/province?</h2>
+            <div class="quiz-input-row">
+              <input type="text" id="cityProvince" name="location" class="form-input" placeholder="e.g. Ottawa, Ontario" required>
+            </div>
+          </div>
+
+          <!-- Q5 -->
+          <div class="quiz-step" data-step="5">
+            <h2>5. What is your target move-out date?</h2>
+            <div class="quiz-input-row">
+              <input type="date" id="moveOutDate" name="move_out_date" class="form-input" required>
+            </div>
+          </div>
+
+          <div class="quiz-actions" id="quiz-actions">
+            <button type="button" class="btn-primary" id="btn-prev" style="visibility: hidden;">Previous</button>
+            <button type="button" class="btn-primary btn-accent" id="btn-next">Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      const user = requireAuth();
+      if (!user) return;
+
+      const STORAGE_QUIZ = 'silentlease_exitPlanData';
+      const steps = document.querySelectorAll('.quiz-step');
+      const totalSteps = steps.length;
+      const progressFill = document.getElementById('progress-fill');
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+
+      let currentStep = 1;
+
+      function updateUI() {
+        steps.forEach((s, i) => {
+          s.classList.toggle('active', parseInt(s.dataset.step) === currentStep);
+        });
+        progressFill.style.width = (currentStep / totalSteps * 100) + '%';
+        btnPrev.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+        btnNext.textContent = currentStep === totalSteps ? 'Complete' : 'Next';
+        // Ensure city/date inputs are visible and focused when their step is shown
+        if (currentStep === 4) {
+          const cityInput = document.getElementById('cityProvince');
+          if (cityInput) {
+            cityInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(function() { cityInput.focus(); }, 400);
+          }
+        } else if (currentStep === 5) {
+          const dateInput = document.getElementById('moveOutDate');
+          if (dateInput) {
+            dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(function() { dateInput.focus(); }, 400);
+          }
+        }
+      }
+
+      function selectOption(container) {
+        container.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+        const selected = container.querySelector('input:checked');
+        if (selected) selected.closest('.quiz-option').classList.add('selected');
+      }
+
+      steps.forEach(step => {
+        const opts = step.querySelectorAll('.quiz-option');
+        opts.forEach(opt => {
+          opt.addEventListener('click', function() {
+            const input = this.querySelector('input');
+            if (input) {
+              input.checked = true;
+              selectOption(step);
+              // Auto-advance only when next step has options (don't skip city/date steps 4 and 5)
+              setTimeout(function() {
+                if (currentStep >= totalSteps) return;
+                const nextStepEl = document.querySelector('.quiz-step[data-step="' + (currentStep + 1) + '"]');
+                const nextHasOptions = nextStepEl && nextStepEl.querySelectorAll('.quiz-option').length > 0;
+                if (nextHasOptions) {
+                  currentStep++;
+                  updateUI();
+                }
+              }, 300);
+            }
+          });
+        });
+      });
+
+      btnPrev.addEventListener('click', function() {
+        if (currentStep > 1) {
+          currentStep--;
+          updateUI();
+        }
+      });
+
+      btnNext.addEventListener('click', function() {
+        if (currentStep === totalSteps) {
+          // Validate Q4 and Q5
+          const city = document.getElementById('cityProvince').value.trim();
+          const date = document.getElementById('moveOutDate').value;
+          if (!city || !date) {
+            alert('Please enter your city/province and move-out date.');
+            return;
+          }
+          const landlordStatus = document.querySelector('input[name="landlordRelation"]:checked')?.value || '';
+          const exitPlanData = {
+            reason: document.querySelector('input[name="reason"]:checked')?.value || '',
+            landlordRelation: landlordStatus,
+            noticePeriod: document.querySelector('input[name="noticePeriod"]:checked')?.value || '',
+            cityProvince: city,
+            moveOutDate: date
+          };
+          // Housing-only payload for Formspree (sent to your email)
+          const housingPayload = {
+            email: user ? user.email : '',
+            location: city,
+            move_out_date: date,
+            landlord_status: landlordStatus
+          };
+          const btnNext = document.getElementById('btn-next');
+          if (btnNext) btnNext.disabled = true;
+          (typeof submitHousingToFormspree === 'function' ? submitHousingToFormspree(housingPayload) : Promise.resolve(true))
+            .then(function() {
+              if (typeof saveAppState === 'function') {
+                saveAppState({ isPlanGenerated: true, exitPlanData: exitPlanData });
+              } else {
+                localStorage.setItem('silentlease_exitPlanData', JSON.stringify(exitPlanData));
+              }
+              if (typeof showNotification === 'function') showNotification('Housing details sent!', 'success');
+              window.location.href = 'dashboard.html';
+            })
+            .catch(function() {
+              if (typeof saveAppState === 'function') {
+                saveAppState({ isPlanGenerated: true, exitPlanData: exitPlanData });
+              } else {
+                localStorage.setItem('silentlease_exitPlanData', JSON.stringify(exitPlanData));
+              }
+              if (typeof showNotification === 'function') showNotification('Housing details sent!', 'success');
+              window.location.href = 'dashboard.html';
+            });
+        } else {
+          // For Q4 and Q5, allow Next without auto-advance
+          if (currentStep === 4 || currentStep === 5) {
+            if (currentStep === 4) {
+              const city = document.getElementById('cityProvince').value.trim();
+              if (!city) { alert('Please enter your city/province.'); return; }
+            }
+            if (currentStep === 5) {
+              const date = document.getElementById('moveOutDate').value;
+              if (!date) { alert('Please select your move-out date.'); return; }
+            }
+          }
+          currentStep++;
+          updateUI();
+        }
+      });
+
+      updateUI();
+    })();
+  </script>
+</body>
+</html>
