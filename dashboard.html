@@ -216,6 +216,18 @@
     @media (min-width: 769px) { .main__mobile-header { display: none; } }
     @media (max-width: 600px) { .settings-form__row { grid-template-columns: 1fr; } .profile-form__row { grid-template-columns: 1fr; } }
     @media (max-width: 900px) { .profile-bento { grid-template-columns: 1fr; } .profile-header-card { margin-left: var(--space-md); margin-right: var(--space-md); } .profile-content { padding-left: var(--space-md); padding-right: var(--space-md); } }
+    @media (max-width: 600px) {
+      .profile-tabs { flex-wrap: wrap; gap: 4px; padding: 6px; }
+      .profile-tab { padding: var(--space-xs) var(--space-sm); font-size: 0.8rem; }
+      .profile-content { padding: var(--space-lg) var(--space-md) 0; }
+      .profile-tab-panel { min-width: 0; overflow-wrap: break-word; }
+      .profile-tab-panel .profile-card { padding: var(--space-md); }
+      .profile-tab-panel .profile-card__title { font-size: 0.9rem; margin-bottom: var(--space-sm); }
+      .profile-tab-panel .profile-card__lead { font-size: 0.875rem; }
+      .profile-tab-panel .profile-simple-list li { padding-left: 1rem; font-size: 0.9rem; word-wrap: break-word; }
+      .profile-tab-panel .profile-card__muted { font-size: 0.8rem; }
+      .profile-tab-panel .btn-primary { width: 100%; max-width: 100%; }
+    }
   </style>
 </head>
 <body>
