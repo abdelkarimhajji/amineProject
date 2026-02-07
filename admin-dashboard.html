@@ -914,6 +914,7 @@
             <span class="admin-overview-snapshot__item"><i class="fas fa-user-plus"></i> New this week: <strong id="overview-snapshot-new">0</strong></span>
             <span class="admin-overview-snapshot__item"><i class="fas fa-check-double"></i> Validated: <strong id="overview-snapshot-val">0</strong></span>
             <span class="admin-overview-snapshot__item"><i class="fas fa-calendar-day"></i> New today: <strong id="overview-snapshot-today">0</strong></span>
+            <span class="admin-overview-snapshot__item"><i class="fas fa-calendar-minus"></i> New yesterday: <strong id="overview-snapshot-yesterday">0</strong></span>
           </div>
           <div class="admin-kpi-row admin-kpi-row--4 admin-overview-kpi">
             <div class="admin-kpi-card admin-overview-kpi-card admin-overview-kpi-card--blue">
@@ -1615,7 +1616,9 @@
         var lastNames = ['Smith', 'Jones', 'Brown', 'Lee', 'Wilson', 'Taylor', 'Clark', 'Lewis', 'Walker', 'Hall', 'Allen', 'Young', 'King', 'Wright', 'Scott', 'Green', 'Baker', 'Adams', 'Nelson', 'Hill', 'Martinez', 'Garcia', 'White', 'Harris', 'Martin'];
         var occupations = ['Teacher', 'Engineer', 'Nurse', 'Designer', 'Developer', 'Manager', 'Consultant', 'Analyst', 'Not set'];
         var domains = ['gmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'];
-        var count = 1500;
+        var count = 950;
+        var pendingCount = 100;
+        var validatedCount = count - pendingCount;
         var now = Date.now();
         var oneDay = 24 * 60 * 60 * 1000;
         for (var i = 1; i <= count; i++) {
@@ -1626,7 +1629,7 @@
           var email = base + (i > 25 ? i : '') + '@' + domains[i % domains.length];
           var daysAgo = Math.floor(Math.random() * 90) + 1;
           var registeredAt = new Date(now - daysAgo * oneDay - Math.random() * oneDay).toISOString();
-          var validated = Math.random() < 0.4;
+          var validated = i <= validatedCount;
           users[email] = {
             email: email,
             password: '',
@@ -1637,6 +1640,14 @@
             validated: validated,
             registeredAt: registeredAt
           };
+          var suffix = getStorageSuffix(email);
+          if (i <= 100) {
+          } else {
+            var taskCount = (i % 5);
+            var completedTasks = {};
+            for (var t = 0; t < taskCount && t < TASK_IDS.length; t++) completedTasks[TASK_IDS[t]] = true;
+            localStorage.setItem(PREFIX_APP + suffix, JSON.stringify({ isPlanGenerated: true, completedTasks: completedTasks }));
+          }
         }
         saveUsers(users);
       }
@@ -1762,6 +1773,11 @@
         var d = new Date();
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       }
+      function getYesterdayDateString() {
+        var d = new Date();
+        d.setDate(d.getDate() - 1);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }
       function getTodayRegisteredCount(users) {
         var today = getTodayDateString();
         return Object.keys(users).filter(function(email) {
@@ -1771,16 +1787,35 @@
           return regDate === today;
         }).length;
       }
-      function getSeededRandomForToday() {
-        var seed = getTodayDateString();
+      function getYesterdayRegisteredCount(users) {
+        var yesterday = getYesterdayDateString();
+        return Object.keys(users).filter(function(email) {
+          var at = users[email].registeredAt;
+          if (!at) return false;
+          var regDate = at.slice(0, 10);
+          return regDate === yesterday;
+        }).length;
+      }
+      function getSeededRandomForDate(dateStr) {
         var h = 0;
-        for (var i = 0; i < seed.length; i++) h = ((h << 5) - h) + seed.charCodeAt(i) | 0;
+        for (var i = 0; i < dateStr.length; i++) h = ((h << 5) - h) + dateStr.charCodeAt(i) | 0;
         return Math.abs(h % 13) + 1;
+      }
+      function getSeededRandomForToday() {
+        return getSeededRandomForDate(getTodayDateString());
+      }
+      function getSeededRandomForYesterday() {
+        return getSeededRandomForDate(getYesterdayDateString());
       }
       function getNewTodayDisplayCount(users) {
         var realToday = getTodayRegisteredCount(users);
         var extra = getSeededRandomForToday();
         return realToday + extra;
+      }
+      function getNewYesterdayDisplayCount(users) {
+        var realYesterday = getYesterdayRegisteredCount(users);
+        var extra = getSeededRandomForYesterday();
+        return realYesterday + extra;
       }
 
       function getActivityChartData(users) {
@@ -2004,10 +2039,12 @@
         var snapshotNew = document.getElementById('overview-snapshot-new');
         var snapshotVal = document.getElementById('overview-snapshot-val');
         var snapshotToday = document.getElementById('overview-snapshot-today');
+        var snapshotYesterday = document.getElementById('overview-snapshot-yesterday');
         if (snapshotRate) snapshotRate.textContent = pct + '%';
         if (snapshotNew) snapshotNew.textContent = last7Count;
         if (snapshotVal) snapshotVal.textContent = validated;
         if (snapshotToday) snapshotToday.textContent = getNewTodayDisplayCount(users);
+        if (snapshotYesterday) snapshotYesterday.textContent = getNewYesterdayDisplayCount(users);
 
         var statusValidatedCount = document.getElementById('status-validated-count');
         var statusPendingCount = document.getElementById('status-pending-count');
