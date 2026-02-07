@@ -44,8 +44,12 @@
 
   <script>
     (function() {
-      var ADMINS_KEY = 'silentlease_admins';
       var SESSION_KEY = 'silentlease_admin';
+      if (sessionStorage.getItem(SESSION_KEY)) {
+        window.location.href = 'admin-dashboard.html';
+        return;
+      }
+      var ADMINS_KEY = 'silentlease_admins';
       var SESSION_NAME = 'silentlease_admin_name';
       var SESSION_ROLE = 'silentlease_admin_role';
 

@@ -98,6 +98,10 @@
   <script src="script.js"></script>
   <script>
     (function() {
+      if (typeof getCurrentUser === 'function' && getCurrentUser()) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
       var params = new URLSearchParams(window.location.search);
       var preEmail = params.get('email');
       if (preEmail) document.getElementById('email').value = preEmail;

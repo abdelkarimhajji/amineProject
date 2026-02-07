@@ -51,6 +51,10 @@
   <script src="script.js"></script>
   <script>
     (function() {
+      if (typeof getCurrentUser === 'function' && getCurrentUser()) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
       document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const emailEl = document.getElementById('email');

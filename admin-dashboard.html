@@ -306,6 +306,11 @@
       border-bottom: 2px solid rgba(59,130,246,0.2); padding: 1.25rem 1.5rem;
     }
     .admin-users-toolbar__select--filter { border-color: rgba(59,130,246,0.35); background: rgba(255,255,255,0.8); }
+    .admin-users-toolbar__search {
+      min-width: 200px; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid var(--admin-border);
+      border-radius: var(--admin-radius-sm); background: var(--admin-surface); color: var(--admin-text);
+    }
+    .admin-users-toolbar__search::placeholder { color: var(--admin-text-muted); }
     .admin-users-strip {
       display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0;
       width: 100%; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; border-radius: var(--admin-radius);
@@ -1042,6 +1047,8 @@
                 <span class="admin-users-toolbar__count" id="admin-users-count">0 users</span>
               </div>
               <div class="admin-users-toolbar__right">
+                <label for="admin-users-search" class="admin-users-toolbar__label">Search</label>
+                <input type="search" id="admin-users-search" class="admin-users-toolbar__search form-input" placeholder="Name, email, phone..." aria-label="Search users by name, email or phone">
                 <label for="admin-users-filter" class="admin-users-toolbar__label">Filter</label>
                 <select id="admin-users-filter" class="admin-users-toolbar__select admin-users-toolbar__select--filter">
                   <option value="all">All users</option>
@@ -1563,6 +1570,7 @@
       var USERS_KEY = 'silentlease_users';
       var usersCurrentPage = 1;
       var usersFilter = 'all';
+      var usersSearchQuery = '';
       var selectedUserEmails = {};
       var recentRegCurrentPage = 1;
       var activityCurrentPage = 1;
@@ -1876,6 +1884,17 @@
           return L === 'validated' || L === 'complete_validated';
         });
         else emails = allEmails.filter(function(email) { return getUserFilterLabel(email, users) === usersFilter; });
+        var searchEl = document.getElementById('admin-users-search');
+        if (searchEl) usersSearchQuery = (searchEl.value || '').trim().toLowerCase();
+        if (usersSearchQuery) {
+          emails = emails.filter(function(email) {
+            var u = users[email];
+            var name = (u.name || '').toLowerCase();
+            var emailStr = (email || '').toLowerCase();
+            var phone = (u.phone || '').toLowerCase();
+            return name.indexOf(usersSearchQuery) !== -1 || emailStr.indexOf(usersSearchQuery) !== -1 || phone.indexOf(usersSearchQuery) !== -1;
+          });
+        }
         var tbody = document.getElementById('admin-users-body');
         var emptyEl = document.getElementById('admin-empty');
         var validatedCount = allEmails.filter(function(e) { return !!users[e].validated && userHasQuiz(e); }).length;
@@ -2700,6 +2719,8 @@
 
       var usersFilterEl = document.getElementById('admin-users-filter');
       if (usersFilterEl) usersFilterEl.addEventListener('change', function() { usersCurrentPage = 1; renderUsers(); });
+      var usersSearchEl = document.getElementById('admin-users-search');
+      if (usersSearchEl) usersSearchEl.addEventListener('input', function() { usersCurrentPage = 1; renderUsers(); });
 
       var activityFilterEl = document.getElementById('activity-filter');
       if (activityFilterEl) activityFilterEl.addEventListener('change', function() { activityCurrentPage = 1; updateActivityCharts(); });
