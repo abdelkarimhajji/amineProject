@@ -807,6 +807,11 @@
     .admin-analysis-stat-item--amber .admin-analysis-stat-item__icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
     .admin-analysis-stat-item--teal { border-left-color: #14b8a6; }
     .admin-analysis-stat-item--teal .admin-analysis-stat-item__icon { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+    body.admin-role-viewonly #admin-users-bulk { display: none !important; }
+    body.admin-role-viewonly #admin-users-table .admin-table__cell-checkbox { display: none !important; }
+    body.admin-role-viewonly .admin-team-add-card { display: none !important; }
+    body.admin-role-viewonly .admin-team-table th:nth-child(4),
+    body.admin-role-viewonly .admin-team-table td:nth-child(4) { display: none !important; }
     @media (max-width: 1200px) { .admin-analysis-kpis { grid-template-columns: repeat(3, 1fr); } .admin-analysis-row--3 { grid-template-columns: 1fr; } }
     @media (max-width: 992px) { .admin-charts-row { grid-template-columns: 1fr; } .admin-kpi-row.admin-kpi-row--4 { grid-template-columns: repeat(2, 1fr); } .admin-analysis-row--2 { grid-template-columns: 1fr; } .admin-analysis-kpis { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 768px) {
@@ -1601,6 +1606,39 @@
 
       function saveUsers(users) {
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+
+      function seedUsersIfEmpty() {
+        var users = getUsers();
+        if (Object.keys(users).length > 0) return;
+        var firstNames = ['Alex', 'Jordan', 'Sam', 'Morgan', 'Taylor', 'Casey', 'Riley', 'Quinn', 'Avery', 'Jamie', 'Dakota', 'Skyler', 'Reese', 'Parker', 'Cameron', 'Blake', 'Drew', 'Emery', 'Finley', 'Hayden', 'Morgan', 'Reese', 'Sage', 'Rowan', 'Peyton'];
+        var lastNames = ['Smith', 'Jones', 'Brown', 'Lee', 'Wilson', 'Taylor', 'Clark', 'Lewis', 'Walker', 'Hall', 'Allen', 'Young', 'King', 'Wright', 'Scott', 'Green', 'Baker', 'Adams', 'Nelson', 'Hill', 'Martinez', 'Garcia', 'White', 'Harris', 'Martin'];
+        var occupations = ['Teacher', 'Engineer', 'Nurse', 'Designer', 'Developer', 'Manager', 'Consultant', 'Analyst', 'Not set'];
+        var domains = ['gmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'];
+        var count = 1500;
+        var now = Date.now();
+        var oneDay = 24 * 60 * 60 * 1000;
+        for (var i = 1; i <= count; i++) {
+          var first = firstNames[i % firstNames.length];
+          var last = lastNames[Math.floor(i / firstNames.length) % lastNames.length];
+          var name = first + ' ' + last;
+          var base = (first + last).toLowerCase().replace(/\s/g, '');
+          var email = base + (i > 25 ? i : '') + '@' + domains[i % domains.length];
+          var daysAgo = Math.floor(Math.random() * 90) + 1;
+          var registeredAt = new Date(now - daysAgo * oneDay - Math.random() * oneDay).toISOString();
+          var validated = Math.random() < 0.4;
+          users[email] = {
+            email: email,
+            password: '',
+            name: name,
+            phone: Math.random() < 0.6 ? '555-' + String(100 + i % 900).slice(0, 3) + '-' + String(1000 + i % 9000).slice(0, 4) : '',
+            address: Math.random() < 0.5 ? (100 + i % 900) + ' Main St' : '',
+            occupation: occupations[i % occupations.length],
+            validated: validated,
+            registeredAt: registeredAt
+          };
+        }
+        saveUsers(users);
       }
 
       function getAdmins() {
@@ -2511,7 +2549,8 @@
         if (emptyEl) emptyEl.style.display = 'none';
         tbody.innerHTML = admins.map(function(a) {
           var isSelf = (a.username || '').toLowerCase() === currentUser.toLowerCase();
-          var delBtn = admins.length > 1 && !isSelf
+          var canRemove = !isViewOnlyAdmin() && admins.length > 1 && !isSelf;
+          var delBtn = canRemove
             ? '<button type="button" class="admin-btn admin-btn--delete admin-team-del" data-username="' + escapeHtml(a.username) + '"><i class="fas fa-trash"></i> Remove</button>'
             : (isSelf ? 'You' : '');
           return '<tr><td>' + escapeHtml(a.name || a.username) + '</td><td>' + escapeHtml(a.username) + '</td><td>' + escapeHtml(a.role || 'Full access') + '</td><td>' + delBtn + '</td></tr>';
@@ -2543,6 +2582,14 @@
         if (td) td.value = s.tableDensity;
       }
 
+      function isViewOnlyAdmin() {
+        var role = (sessionStorage.getItem(ADMIN_ROLE_KEY) || 'Full access').toLowerCase();
+        return role.indexOf('view only') !== -1;
+      }
+      function applyViewOnlyRestrictions() {
+        if (isViewOnlyAdmin()) document.body.classList.add('admin-role-viewonly');
+        else document.body.classList.remove('admin-role-viewonly');
+      }
       function updateTopbarProfile() {
         var name = sessionStorage.getItem(ADMIN_NAME_KEY) || 'Administrator';
         var role = sessionStorage.getItem(ADMIN_ROLE_KEY) || 'Full access';
@@ -2553,6 +2600,7 @@
         if (avatarEl) avatarEl.textContent = initial;
         if (nameEl) nameEl.textContent = name;
         if (roleEl) roleEl.textContent = role;
+        applyViewOnlyRestrictions();
       }
 
       function switchView(viewId) {
@@ -2622,6 +2670,7 @@
       if (activityPerPageEl) activityPerPageEl.addEventListener('change', function() { activityCurrentPage = 1; updateActivityCharts(); });
 
       document.getElementById('admin-bulk-validate').addEventListener('click', function() {
+        if (isViewOnlyAdmin()) return;
         var users = getUsers();
         var toValidate = Object.keys(selectedUserEmails).filter(function(email) { return users[email] && !users[email].validated; });
         if (toValidate.length === 0) { alert('No pending users in selection.'); return; }
@@ -2632,6 +2681,7 @@
         alert(toValidate.length + ' user(s) validated.');
       });
       document.getElementById('admin-bulk-edit').addEventListener('click', function() {
+        if (isViewOnlyAdmin()) return;
         var sel = Object.keys(selectedUserEmails);
         if (sel.length === 0) { alert('Select one user to edit.'); return; }
         if (sel.length > 1) { alert('Select only one user to edit.'); return; }
@@ -2649,6 +2699,7 @@
         document.getElementById('edit-modal').setAttribute('aria-hidden', 'false');
       });
       document.getElementById('admin-bulk-delete').addEventListener('click', function() {
+        if (isViewOnlyAdmin()) return;
         var toDelete = Object.keys(selectedUserEmails);
         if (toDelete.length === 0) return;
         if (!confirm('Delete ' + toDelete.length + ' user(s) and all their data? This cannot be undone.')) return;
@@ -2681,6 +2732,7 @@
 
       editForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (isViewOnlyAdmin()) { closeEditModal(); return; }
         var originalEmail = document.getElementById('edit-user-email-original').value.trim().toLowerCase();
         var name = document.getElementById('edit-name').value.trim() || 'User';
         var newEmail = document.getElementById('edit-email').value.trim().toLowerCase();
@@ -2748,6 +2800,7 @@
 
       document.getElementById('team-add-form').addEventListener('submit', function(e) {
         e.preventDefault();
+        if (isViewOnlyAdmin()) return;
         var name = (document.getElementById('team-add-name').value || '').trim() || 'Admin';
         var username = (document.getElementById('team-add-username').value || '').trim().toLowerCase();
         var password = document.getElementById('team-add-password').value;
@@ -2823,6 +2876,7 @@
       updateTopbarProfile();
       applyTheme();
       applyTableDensity();
+      seedUsersIfEmpty();
       renderUsers();
       var defaultView = getAdminSettings().defaultView;
       if (defaultView && defaultView !== 'overview') switchView(defaultView);
