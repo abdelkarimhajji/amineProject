@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Silent Lease</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .form-input:focus-visible, button:focus-visible { outline: 2px solid #008080; outline-offset: 2px; }
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F5F5F7; padding: var(--space-xl); }
+    .auth-card { max-width: 420px; width: 100%; }
+    .auth-card h1 { font-size: 1.75rem; margin-bottom: var(--space-md); color: var(--color-primary); }
+    .auth-card p { color: var(--color-text-muted); margin-bottom: var(--space-xl); }
+    .auth-form { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .form-group label { display: block; font-weight: 500; margin-bottom: var(--space-sm); font-size: 0.95rem; }
+    .error-msg { color: var(--color-danger); font-size: 0.9rem; margin-top: var(--space-xs); }
+    .back-link { display: inline-flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-lg); color: var(--color-text-muted); font-size: 0.95rem; }
+    .back-link:hover { color: var(--color-primary); }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="card auth-card">
+      <a href="index.html" class="back-link"><span>←</span> Back to Home</a>
+      <h1>Admin Login</h1>
+      <p>Sign in to manage registered users.</p>
+
+      <form class="auth-form" id="admin-login-form">
+        <div class="form-group">
+          <label for="admin-username">Username</label>
+          <input type="text" id="admin-username" class="form-input" placeholder="admin" autocomplete="username" required>
+          <span class="error-msg" id="admin-username-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" class="form-input" placeholder="Password" autocomplete="current-password" required>
+          <span class="error-msg" id="admin-password-error"></span>
+        </div>
+        <button type="submit" class="btn-primary btn-accent" style="width: 100%;">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var ADMINS_KEY = 'silentlease_admins';
+      var SESSION_KEY = 'silentlease_admin';
+      var SESSION_NAME = 'silentlease_admin_name';
+      var SESSION_ROLE = 'silentlease_admin_role';
+
+      function getAdmins() {
+        try {
+          var raw = localStorage.getItem(ADMINS_KEY);
+          if (raw) {
+            var list = JSON.parse(raw);
+            if (list && list.length) return list;
+          }
+        } catch (e) {}
+        return [{ username: 'admin', password: 'admin', name: 'Administrator', role: 'Full access' }];
+      }
+
+      document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var username = document.getElementById('admin-username').value.trim().toLowerCase();
+        var password = document.getElementById('admin-password').value;
+        var userErr = document.getElementById('admin-username-error');
+        var passErr = document.getElementById('admin-password-error');
+        userErr.textContent = '';
+        passErr.textContent = '';
+
+        var admins = getAdmins();
+        var admin = admins.find(function(a) { return a.username.toLowerCase() === username && a.password === password; });
+        if (!admin) {
+          userErr.textContent = 'Invalid username or password.';
+          return;
+        }
+        sessionStorage.setItem(SESSION_KEY, admin.username);
+        sessionStorage.setItem(SESSION_NAME, admin.name || admin.username);
+        sessionStorage.setItem(SESSION_ROLE, admin.role || 'Full access');
+        window.location.href = 'admin-dashboard.html';
+      });
+    })();
+  </script>
+</body>
+</html>

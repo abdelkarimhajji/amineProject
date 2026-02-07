@@ -170,6 +170,7 @@ function register(email, password, name, phone, address, occupation) {
     phone: (phone || '').trim(),
     address: (address || '').trim(),
     occupation: (occupation || '').trim(),
+    registeredAt: new Date().toISOString(),
   };
   saveUsers(users);
 
