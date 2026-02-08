@@ -1621,38 +1621,79 @@
       function seedUsersIfEmpty() {
         var users = getUsers();
         if (Object.keys(users).length > 0) return;
-        var firstNames = ['Alex', 'Jordan', 'Sam', 'Morgan', 'Taylor', 'Casey', 'Riley', 'Quinn', 'Avery', 'Jamie', 'Dakota', 'Skyler', 'Reese', 'Parker', 'Cameron', 'Blake', 'Drew', 'Emery', 'Finley', 'Hayden', 'Morgan', 'Reese', 'Sage', 'Rowan', 'Peyton'];
-        var lastNames = ['Smith', 'Jones', 'Brown', 'Lee', 'Wilson', 'Taylor', 'Clark', 'Lewis', 'Walker', 'Hall', 'Allen', 'Young', 'King', 'Wright', 'Scott', 'Green', 'Baker', 'Adams', 'Nelson', 'Hill', 'Martinez', 'Garcia', 'White', 'Harris', 'Martin'];
-        var occupations = ['Teacher', 'Engineer', 'Nurse', 'Designer', 'Developer', 'Manager', 'Consultant', 'Analyst', 'Not set'];
-        var domains = ['gmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'];
-        var count = 950;
-        var pendingCount = 100;
+        var fixedNames = ['Ayoub Rafouk', 'Anass Sammou', 'Tom Woods', 'Charles Dupré', 'Maxime Ménard', 'Nabil Khidour', 'Aziz Jertila', 'Oumaima Missouri', 'Mohamed Yassine Fadil', 'Riham Serrakh', 'Yasmine Hadri', 'Omar Aberdaa', 'Ayoub Benjelloun', 'Ghofrane Al moatassim', 'Joachim sadiki', 'Béni Ntabaza', 'Richard Kasumba', 'John coffie teye', 'Marc-André Kanse', 'Priscilla Kanté', 'Ornella Amara', 'Chelsea smith', 'Mikayla Harvin', 'Alae Khidour', 'Youssef Cheikh', 'Nizar Jabbary'];
+        var extraNames = ['Luca Rossi', 'Emma Schmidt', 'Pierre Dubois', 'Sofia García', 'Wei Chen', 'Yuki Tanaka', 'Priya Sharma', 'Amara Diallo', 'Kofi Mensah', 'Diego Rodríguez', 'Elena Petrova', 'Hans Müller', 'Fatima Hassan', 'James O\'Brien', 'Mei Lin', 'Omar Khalil', 'Anna Kowalski', 'Carlos Silva', 'Nina Bergström', 'Ravi Patel', 'Léa Martin', 'Ahmed Ibrahim', 'Maria Santos', 'Lars Eriksen', 'Zara Khan', 'Viktor Novak', 'Isabella Romano', 'Felix Weber', 'Amina Okonkwo', 'Thomas Andersen', 'Li Wei', 'Claire Fontaine', 'Raj Mehta', 'Ingrid Lindqvist', 'Pablo Fernández', 'Sanaa Al-Rashid', 'Nikolai Volkov', 'Marta Nowak', 'Bruno Costa', 'Yuki Yamamoto', 'Hassan El-Amin', 'Eva Szabó', 'Miguel Torres', 'Anja Hoffmann', 'Kenji Watanabe', 'Olga Ivanova', 'Daniel Kim', 'Sophie Laurent', 'Marcus Johansson', 'Layla Abbas', 'Andrei Popescu', 'Julia Schmidt', 'Tariq Mahmoud', 'Nadia Kowalczyk'];
+        var allNames = fixedNames.concat(extraNames);
+        var otherOccupations = ['Engineer', 'Professor', 'Teacher', 'Nurse', 'Designer', 'Developer', 'Manager', 'Consultant', 'Analyst'];
+        var domains = ['gmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'hotmail.com', 'protonmail.com', 'mail.com'];
+        var count = 80;
+        var pendingCount = 12;
         var validatedCount = count - pendingCount;
         var now = Date.now();
         var oneDay = 24 * 60 * 60 * 1000;
-        for (var i = 1; i <= count; i++) {
-          var first = firstNames[i % firstNames.length];
-          var last = lastNames[Math.floor(i / firstNames.length) % lastNames.length];
-          var name = first + ' ' + last;
-          var base = (first + last).toLowerCase().replace(/\s/g, '');
-          var email = base + (i > 25 ? i : '') + '@' + domains[i % domains.length];
+        function toSlug(s) { return s.toLowerCase().replace(/[\s']/g, '').replace(/[éèêë]/g, 'e').replace(/[àâä]/g, 'a').replace(/[ùûü]/g, 'u').replace(/[îï]/g, 'i').replace(/[ôö]/g, 'o').replace(/[ç]/g, 'c').replace(/[^a-z0-9]/g, ''); }
+        function firstLast(name) {
+          var parts = name.trim().split(/\s+/);
+          if (parts.length === 1) return { first: parts[0], last: '' };
+          var first = parts[0];
+          var last = parts.slice(1).join(' ');
+          return { first: first, last: last };
+        }
+        for (var i = 0; i < count; i++) {
+          var name = allNames[i];
+          var fl = firstLast(name);
+          var f = toSlug(fl.first);
+          var l = toSlug(fl.last);
+          var fn = fl.first;
+          var ln = fl.last;
+          var num = (i % 97) + 1;
+          var domain = domains[i % domains.length];
+          var email;
+          switch (i % 14) {
+            case 0:  email = f + '.' + l + '@' + domain; break;
+            case 1:  email = l + '.' + f + '@' + domain; break;
+            case 2:  email = f + l + '@' + domain; break;
+            case 3:  email = l + '_' + f + '@' + domain; break;
+            case 4:  email = f + '_' + l + '@' + domain; break;
+            case 5:  email = (f.charAt(0) + '.' + l + '@' + domain); break;
+            case 6:  email = (l + '.' + f.charAt(0) + '@' + domain); break;
+            case 7:  email = f + l + num + '@' + domain; break;
+            case 8:  email = 'user.' + f + '@' + domain; break;
+            case 9:  email = l + '_' + fn.replace(/\s/g, '') + '@' + domain; break;
+            case 10: email = f + num + '.' + l + '@' + domain; break;
+            case 11: email = l + f.charAt(0) + '@' + domain; break;
+            case 12: email = f.charAt(0) + l + '@' + domain; break;
+            default: email = f + '.' + l + num + '@' + domain;
+          }
+          var phoneFormats = [
+            function() { return '(514) 555-' + String(1000 + (i * 17) % 9000).slice(-4); },
+            function() { return '555-' + String(100 + (i * 7) % 900).slice(-3) + '-' + String(1000 + (i * 31) % 9000).slice(-4); },
+            function() { return '+1 ' + (438 + i % 3) + ' 555 ' + String(1000 + (i * 11) % 9000).slice(-4); },
+            function() { return '555.' + String(100 + (i * 13) % 900).slice(-3) + '.' + String(1000 + (i * 19) % 9000).slice(-4); },
+            function() { return String(5140000000 + (i * 123456) % 9999999); },
+            function() { return '1-555-' + String(100 + (i * 7) % 900).slice(-3) + '-' + String(1000 + (i * 31) % 9000).slice(-4); },
+            function() { return '(418) 555-' + String(1000 + (i * 23) % 9000).slice(-4); },
+            function() { return '555 ' + String(100 + (i * 7) % 900).slice(-3) + ' ' + String(1000 + (i * 31) % 9000).slice(-4); }
+          ];
+          var phone = (i % 5 !== 2) ? phoneFormats[i % phoneFormats.length]() : '';
+          var streets = ['Main St', 'Oak Ave', 'Rue Principale', 'King Blvd', 'Park Rd', 'Cedar Lane', 'Maple Dr', 'Elm St'];
+          var address = (i % 3 !== 0) ? (100 + (i * 7) % 890) + ' ' + streets[i % streets.length] : '';
           var daysAgo = Math.floor(Math.random() * 90) + 1;
           var registeredAt = new Date(now - daysAgo * oneDay - Math.random() * oneDay).toISOString();
-          var validated = i <= validatedCount;
+          var validated = i < validatedCount;
           users[email] = {
             email: email,
             password: '',
             name: name,
-            phone: Math.random() < 0.6 ? '555-' + String(100 + i % 900).slice(0, 3) + '-' + String(1000 + i % 9000).slice(0, 4) : '',
-            address: Math.random() < 0.5 ? (100 + i % 900) + ' Main St' : '',
-            occupation: occupations[i % occupations.length],
+            phone: phone,
+            address: address,
+            occupation: i < 60 ? 'Student' : otherOccupations[(i - 60) % otherOccupations.length],
             validated: validated,
             registeredAt: registeredAt
           };
           var suffix = getStorageSuffix(email);
-          if (i <= 100) {
-          } else {
-            var taskCount = (i % 5);
+          if (i >= 26) {
+            var taskCount = i % 5;
             var completedTasks = {};
             for (var t = 0; t < taskCount && t < TASK_IDS.length; t++) completedTasks[TASK_IDS[t]] = true;
             localStorage.setItem(PREFIX_APP + suffix, JSON.stringify({ isPlanGenerated: true, completedTasks: completedTasks }));

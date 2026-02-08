@@ -913,6 +913,35 @@ a:hover {
   font-size: 1rem;
 }
 
+.footer__social {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.footer__social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: color 0.25s ease, background 0.25s ease, transform 0.2s ease;
+}
+
+.footer__social-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.footer__social-link i {
+  font-size: 1.25rem;
+  color: var(--color-accent-light);
+}
+
 .footer__disclaimer {
   font-size: 0.75rem;
   font-variant: small-caps;
