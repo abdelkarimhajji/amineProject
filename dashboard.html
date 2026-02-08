@@ -18,7 +18,79 @@
     .sidebar__nav a.active { background: rgba(13,148,136,0.18); color: #fff; box-shadow: inset 3px 0 0 #0d9488; }
     .sidebar__nav i { width: 20px; text-align: center; flex-shrink: 0; }
     .sidebar__nav-text { display: inline-block; transition: transform 0.25s ease; }
-    .main { flex: 1; margin-left: 260px; padding: var(--space-2xl); background: var(--color-background); min-height: 100vh; }
+    .dashboard-topbar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-md);
+      padding: 1rem 1.5rem; background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .dashboard-topbar__user { display: flex; align-items: center; gap: var(--space-md); min-width: 0; }
+    .dashboard-topbar__avatar {
+      width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #008080, #20B2AA);
+      color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .dashboard-topbar__info { min-width: 0; display: flex; flex-direction: column; gap: 0.125rem; }
+    .dashboard-topbar__name { font-size: 1rem; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dashboard-topbar__email { font-size: 0.8125rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dashboard-topbar__profile-link {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--radius-md);
+      background: rgba(0,128,128,0.1); color: var(--color-accent); font-weight: 500; font-size: 0.9rem;
+      text-decoration: none; transition: background 0.2s, color 0.2s;
+    }
+    .dashboard-topbar__profile-link:hover { background: rgba(0,128,128,0.18); color: #0d5c5c; }
+    .dashboard-topbar__links { display: flex; align-items: center; gap: 0.5rem; }
+    .settings-panel { min-height: 100%; display: flex; flex-direction: column; background: var(--color-background); }
+    .settings-panel__header {
+      padding: 1.5rem 2rem; background: linear-gradient(135deg, rgba(0,128,128,0.08) 0%, rgba(26,35,126,0.06) 100%);
+      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .settings-panel__inner { padding: 2rem; max-width: 960px; margin: 0 auto; width: 100%; flex: 1; padding-bottom: 3rem; }
+    .settings-panel__title { font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin: 0 0 0.35rem; display: flex; align-items: center; gap: 0.5rem; }
+    .settings-panel__intro { font-size: 0.9375rem; color: var(--color-text-muted); margin: 0; line-height: 1.6; max-width: 640px; }
+    .user-settings-page { display: flex; flex-direction: column; gap: 0; }
+    .user-settings-section {
+      font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted);
+      margin: 1.5rem 0 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border);
+    }
+    .user-settings-section:first-child { margin-top: 0; }
+    .user-settings-block {
+      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+      padding: 1.5rem 1.75rem; box-shadow: var(--shadow-sm); transition: box-shadow 0.2s ease;
+    }
+    .user-settings-block:hover { box-shadow: var(--shadow-md); }
+    .user-settings-block__head { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+    .user-settings-block__icon {
+      width: 44px; height: 44px; border-radius: var(--radius-md); background: rgba(0,128,128,0.12);
+      color: var(--color-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.125rem;
+    }
+    .user-settings-block__title { font-size: 1.0625rem; font-weight: 700; color: var(--color-text); margin: 0 0 0.25rem; }
+    .user-settings-block__desc { font-size: 0.875rem; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+    .user-settings-block .form-group { margin-bottom: 1rem; }
+    .user-settings-block .form-group:last-child { margin-bottom: 0; }
+    .user-settings-block .form-input { width: 100%; max-width: 320px; min-height: 44px; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); font-size: 0.9375rem; }
+    .user-settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .user-settings-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .user-settings-actions .btn-primary { min-height: 44px; padding: 0.6rem 1.5rem; }
+    @media (max-width: 768px) { .user-settings-grid { grid-template-columns: 1fr; } .settings-panel__inner { padding: 1.5rem; } }
+    .user-settings-info {
+      display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.25rem; margin-top: 1.5rem;
+      background: rgba(0,128,128,0.06); border: 1px solid rgba(0,128,128,0.15); border-radius: var(--radius-md);
+    }
+    .user-settings-info i { color: var(--color-accent); font-size: 1.25rem; margin-top: 0.125rem; flex-shrink: 0; }
+    .user-settings-info__title { font-size: 0.9375rem; font-weight: 600; color: var(--color-text); margin: 0 0 0.25rem; }
+    .user-settings-info__text { font-size: 0.8125rem; color: var(--color-text-muted); margin: 0; line-height: 1.5; }
+    .user-settings-alerts-list { background: rgba(0,0,0,0.02); border-radius: var(--radius-md); padding: 0.25rem 0; border: 1px solid var(--color-border); }
+    .user-settings-toggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-border); cursor: pointer; min-height: 52px; transition: background 0.15s ease; }
+    .user-settings-toggle:last-child { border-bottom: none; }
+    .user-settings-toggle:hover { background: rgba(0,0,0,0.02); }
+    .user-settings-toggle .profile-toggle__label { font-size: 0.9375rem; font-weight: 500; color: var(--color-text); }
+    .user-settings-toggle .profile-toggle__track { flex-shrink: 0; }
+    .alerts-toggle-switch { display: inline-flex; align-items: center; flex-shrink: 0; }
+    html[data-theme="dark"] .user-settings-alerts-list { background: rgba(0,0,0,0.2); border-color: #334155; }
+    html[data-theme="dark"] .user-settings-toggle:hover { background: rgba(255,255,255,0.04); }
+    html[data-theme="dark"] .user-settings-toggle .profile-toggle__label { color: #f1f5f9; }
+    .main { flex: 1; margin-left: 260px; padding: 0; background: var(--color-background); min-height: 100vh; display: flex; flex-direction: column; }
+    .main .main-content { flex: 1; padding: var(--space-2xl); }
     .main__header { margin-bottom: var(--space-xl); }
     .main__header h1 { font-size: 1.75rem; color: var(--color-primary); }
     .main__header p { color: var(--color-text-muted); margin-top: var(--space-xs); }
@@ -117,66 +189,112 @@
     .resource-card h3 { font-size: 1rem; margin-bottom: var(--space-xs); }
     .resource-card p { font-size: 0.9rem; color: var(--color-text-muted); }
     .exit-plan-summary .card { margin-bottom: var(--space-md); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.1); }
-    .settings-panel { display: none; }
-    .settings-panel.is-visible { display: block; }
-    .profile-panel { max-width: none; width: 100%; padding-bottom: var(--space-2xl); }
-    .profile-cover { height: 200px; background: linear-gradient(135deg, #008080 0%, #20B2AA 40%, #0d5c5c 100%); border-radius: var(--radius-card) var(--radius-card) 0 0; position: relative; }
-    .profile-cover::after { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); opacity: 0.5; border-radius: var(--radius-card) var(--radius-card) 0 0; }
-    .profile-header-card { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-lg); padding: var(--space-lg) var(--space-xl); margin: -60px var(--space-xl) 0; position: relative; z-index: 2; background: rgba(255,255,255,0.7); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.4); border-radius: var(--radius-card); box-shadow: 0 8px 32px rgba(26,26,46,0.08), 0 2px 8px rgba(0,128,128,0.06); }
-    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #008080, #20B2AA); color: white; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 16px rgba(0,128,128,0.35); }
-    .profile-header__info { flex: 1; min-width: 140px; }
-    .profile-header__name { font-size: 1.35rem; font-weight: 700; color: #1A1A2E; margin: 0 0 var(--space-xs); }
-    .profile-header__email { font-size: 0.9rem; color: #5C5C7A; margin: 0; }
-    .profile-tabs { display: flex; gap: 0; border-radius: var(--radius-md); background: rgba(0,0,0,0.04); padding: 4px; }
-    .profile-tab { padding: var(--space-sm) var(--space-md); border: none; background: transparent; color: #5C5C7A; font-size: 0.9rem; font-weight: 500; cursor: pointer; border-radius: 6px; transition: background 0.25s ease, color 0.25s ease; }
-    .profile-tab:hover { color: #1A1A2E; background: rgba(255,255,255,0.6); }
-    .profile-tab.active { background: #008080; color: white; }
-    .profile-content { padding: var(--space-2xl) var(--space-xl) 0; }
+    .dashboard-panel { display: none; }
+    .dashboard-panel.is-visible { display: block; }
+    .profile-panel { max-width: none; width: 100%; padding-bottom: 3rem; background: var(--color-background); min-height: 100%; }
+    .profile-panel__header { padding: 1.75rem 2rem; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+    .profile-panel__title { font-size: 1.375rem; font-weight: 600; color: var(--color-text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.02em; }
+    .profile-panel__title i { color: var(--color-accent); font-size: 1.25rem; opacity: 0.9; }
+    .profile-panel__intro { font-size: 0.9375rem; color: var(--color-text-muted); margin: 0; line-height: 1.5; max-width: 520px; }
+    .profile-hero { position: relative; margin: 0 2rem; margin-top: 0; }
+    .profile-cover { height: 140px; background: linear-gradient(160deg, #0d9488 0%, #0f766e 50%, #115e59 100%); position: relative; border-radius: 12px 12px 0 0; overflow: hidden; }
+    .profile-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 50%); pointer-events: none; }
+    .profile-header-card { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.5rem; padding: 0 2rem 1.75rem; padding-top: 0; margin-top: -48px; position: relative; z-index: 2; background: var(--color-surface); border: 1px solid var(--color-border); border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .profile-avatar { width: 96px; height: 96px; border-radius: 12px; background: linear-gradient(145deg, #0d9488, #0f766e); color: white; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 2rem; font-weight: 700; flex-shrink: 0; box-shadow: 0 8px 24px rgba(13,148,136,0.35); border: 3px solid var(--color-surface); letter-spacing: -0.02em; }
+    .profile-header__info { flex: 1; min-width: 160px; padding-bottom: 2px; }
+    .profile-header__name { font-size: 1.5rem; font-weight: 600; color: var(--color-text); margin: 0 0 0.2rem; letter-spacing: -0.02em; line-height: 1.2; }
+    .profile-header__email { font-size: 0.9375rem; color: var(--color-text-muted); margin: 0; }
+    .profile-header__badge { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; padding: 0.35rem 0.75rem; background: rgba(13,148,136,0.08); color: #0d9488; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; border-radius: 6px; border: 1px solid rgba(13,148,136,0.2); }
+    .profile-header__badge i { font-size: 0.7rem; opacity: 0.9; }
+    .profile-tabs-wrap { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: 0 2rem; margin: 0 2rem; }
+    .profile-tabs { display: flex; gap: 0; flex-wrap: wrap; }
+    .profile-tab { padding: 1rem 1.25rem; border: none; background: transparent; color: var(--color-text-muted); font-size: 0.9375rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.2s ease, border-color 0.2s ease; }
+    .profile-tab:hover { color: var(--color-text); }
+    .profile-tab.active { color: var(--color-accent); border-bottom-color: var(--color-accent); font-weight: 600; }
+    .profile-content { padding: 2rem; max-width: 800px; margin: 0 auto; }
     .profile-tab-panel { display: none; }
     .profile-tab-panel.is-visible { display: block; }
-    .profile-card__lead { font-size: 0.95rem; color: #5C5C7A; margin-bottom: var(--space-md); line-height: 1.5; }
-    .profile-simple-list { list-style: none; padding: 0; margin: 0 0 var(--space-lg); }
-    .profile-simple-list li { padding: var(--space-xs) 0; padding-left: 1.25rem; position: relative; color: #1A1A2E; }
-    .profile-simple-list li::before { content: '•'; position: absolute; left: 0; color: var(--color-accent); }
-    .profile-card__muted { font-size: 0.85rem; color: #5C5C7A; margin-top: var(--space-md); }
-    .profile-bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-xl); margin-bottom: var(--space-xl); }
-    .profile-card { padding: var(--space-xl); border-radius: var(--radius-card); }
-    .profile-card--glass { background: rgba(255,255,255,0.6); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 4px 24px rgba(26,26,46,0.06), inset 0 1px 0 rgba(255,255,255,0.5); }
-    .profile-card__title { font-size: 0.95rem; font-weight: 700; color: #1A1A2E; margin-bottom: var(--space-lg); text-transform: uppercase; letter-spacing: 0.04em; }
+    .profile-card__lead { font-size: 0.9375rem; color: var(--color-text-muted); margin-bottom: 1.25rem; line-height: 1.55; }
+    .profile-simple-list { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+    .profile-simple-list li { padding: 0.4rem 0; padding-left: 1.5rem; position: relative; color: var(--color-text); font-size: 0.9375rem; line-height: 1.5; }
+    .profile-simple-list li::before { content: ''; position: absolute; left: 0; top: 0.65em; width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); opacity: 0.7; }
+    .profile-card__muted { font-size: 0.875rem; color: var(--color-text-muted); margin-top: 1rem; line-height: 1.5; }
+    .profile-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .profile-bento .profile-card:first-child { grid-column: 1 / -1; }
+    .profile-card { padding: 1.5rem 1.75rem; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-surface); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .profile-card--glass { background: var(--color-surface); }
+    .profile-card__title { font-size: 1rem; font-weight: 600; color: var(--color-text); margin-bottom: 1.25rem; letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.5rem; }
+    .profile-card__title i { color: var(--color-accent); font-size: 1rem; opacity: 0.85; }
     .profile-toggles { display: flex; flex-direction: column; gap: var(--space-md); }
     .profile-toggle { display: flex; align-items: center; gap: var(--space-md); cursor: pointer; }
     .profile-toggle__input { position: absolute; opacity: 0; width: 0; height: 0; }
     .profile-toggle__track { width: 44px; height: 24px; border-radius: 12px; background: var(--color-border); position: relative; transition: background 0.25s ease; flex-shrink: 0; }
     .profile-toggle__track::after { content: ''; position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: transform 0.25s ease; }
     .profile-toggle__input:checked + .profile-toggle__track { background: #008080; }
+    html[data-theme="dark"] { --color-background: #0f172a; --color-surface: #1e293b; --color-text: #f1f5f9; --color-text-muted: #94a3b8; --color-border: #334155; --color-primary: #94a3b8; }
+    html[data-theme="dark"] .dashboard-glass, html[data-theme="dark"] .profile-card--glass, html[data-theme="dark"] .profile-header-card { background: rgba(30,41,59,0.9); border-color: rgba(255,255,255,0.08); }
+    html[data-theme="dark"] .profile-panel__header { background: #1e293b; border-color: #334155; }
+    html[data-theme="dark"] .profile-panel__title { color: #f1f5f9; }
+    html[data-theme="dark"] .profile-panel__title i { color: #5eead4; }
+    html[data-theme="dark"] .profile-panel__intro { color: #94a3b8; }
+    html[data-theme="dark"] .profile-hero .profile-header-card { background: #1e293b; border-color: #334155; }
+    html[data-theme="dark"] .profile-tabs-wrap { background: #1e293b; border-color: #334155; }
+    html[data-theme="dark"] .profile-tab:hover { color: #f1f5f9; }
+    html[data-theme="dark"] .profile-tab.active { color: #5eead4; border-bottom-color: #5eead4; }
+    html[data-theme="dark"] .profile-header__badge { background: rgba(94,234,212,0.12); color: #5eead4; border-color: rgba(94,234,212,0.25); }
+    html[data-theme="dark"] .profile-form .form-input { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+    html[data-theme="dark"] .profile-strategy-table thead { background: rgba(0,0,0,0.2); }
+    html[data-theme="dark"] .profile-strategy-table tbody tr:hover { background: rgba(255,255,255,0.04); }
+    html[data-theme="dark"] .dashboard-topbar { background: #1e293b; border-color: #334155; }
+    html[data-theme="dark"] .user-settings-block { background: rgba(30,41,59,0.95); border-color: #334155; }
+    html[data-theme="dark"] .user-settings-block__title { color: #f1f5f9; }
+    html[data-theme="dark"] .user-settings-block__desc { color: #94a3b8; }
+    html[data-theme="dark"] .user-settings-section { color: #94a3b8; border-color: #334155; }
+    html[data-theme="dark"] .user-settings-info { background: rgba(13,148,136,0.12); border-color: rgba(13,148,136,0.25); }
+    html[data-theme="dark"] .user-settings-info__title { color: #f1f5f9; }
+    html[data-theme="dark"] .user-settings-block .form-input { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+    html[data-theme="dark"] .settings-panel__header { background: linear-gradient(135deg, rgba(13,148,136,0.15) 0%, rgba(30,41,59,0.4) 100%); border-color: #334155; }
+    html[data-theme="dark"] .settings-panel__title { color: #f1f5f9; }
+    html[data-theme="dark"] .metric-card__value, html[data-theme="dark"] .lease-legend h3, html[data-theme="dark"] .activity-feed__item-title { color: #f1f5f9; }
+    html[data-theme="dark"] .strategy-card, html[data-theme="dark"] .local-tip-card, html[data-theme="dark"] .skeleton-empty, html[data-theme="dark"] .action-card { background: rgba(30,41,59,0.8); border-color: rgba(255,255,255,0.08); }
     .profile-toggle__input:checked + .profile-toggle__track::after { transform: translateX(20px); }
     .profile-toggle__label { font-size: 0.9rem; color: #5C5C7A; }
-    .profile-dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-xs) var(--space-lg); margin-bottom: var(--space-md); font-size: 0.9rem; }
-    .profile-dl dt { color: #5C5C7A; font-weight: 500; }
-    .profile-dl dd { color: #1A1A2E; margin: 0; }
-    .profile-bio { font-size: 0.85rem; color: #5C5C7A; line-height: 1.5; margin-bottom: var(--space-lg); padding: var(--space-sm) 0; border-top: 1px solid var(--color-border); margin-top: var(--space-sm); }
-    .profile-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+    .profile-info-section { margin-bottom: 1.75rem; }
+    .profile-dl { display: grid; grid-template-columns: 120px 1fr; gap: 0.6rem 1.5rem; margin: 0 0 1.5rem; font-size: 0.9375rem; }
+    .profile-dl dt { color: var(--color-text-muted); font-weight: 500; }
+    .profile-dl dd { color: var(--color-text); margin: 0; }
+    .profile-bio { font-size: 0.875rem; color: var(--color-text-muted); line-height: 1.55; margin: 1rem 0 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
+    .profile-form-divider { height: 1px; background: var(--color-border); margin: 1.5rem 0 1.25rem; }
+    .profile-form__heading { font-size: 0.9375rem; font-weight: 600; color: var(--color-text); margin-bottom: 1rem; }
+    .profile-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
     .profile-form .form-group--full { grid-column: 1 / -1; }
-    .profile-form__hint { color: #5C5C7A; font-weight: 400; }
-    .profile-form { display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-md); }
-    .profile-save-btn { min-height: 52px; padding: 14px 28px; width: 100%; max-width: 320px; font-size: 1rem; font-weight: 600; border-radius: var(--radius-md); margin-top: var(--space-sm); box-shadow: 0 4px 16px rgba(0,128,128,0.25); }
-    .profile-save-btn:hover { box-shadow: 0 8px 24px rgba(0,128,128,0.35); }
-    .profile-advice-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-md); }
-    .profile-advice-item { display: flex; align-items: flex-start; gap: var(--space-md); }
-    .profile-advice__avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #008080, #20B2AA); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
-    .profile-advice__body strong { display: block; font-size: 0.9rem; color: #1A1A2E; margin-bottom: 2px; }
-    .profile-advice__body p { font-size: 0.8rem; color: #5C5C7A; margin: 0; line-height: 1.4; }
-    .profile-card--table { overflow: hidden; }
-    .profile-strategy-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .profile-strategy-table th { text-align: left; padding: var(--space-md) var(--space-lg); color: #5C5C7A; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--color-border); }
-    .profile-strategy-table td { padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); color: #1A1A2E; }
+    .profile-form__hint { color: var(--color-text-muted); font-weight: 400; font-size: 0.875rem; }
+    .profile-form { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 0; }
+    .profile-form .form-group label { font-size: 0.875rem; font-weight: 500; color: var(--color-text); margin-bottom: 0.35rem; }
+    .profile-form .form-input { min-height: 44px; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--color-border); font-size: 0.9375rem; background: var(--color-background); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .profile-form .form-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .profile-save-btn { min-height: 44px; padding: 0.6rem 1.5rem; max-width: 200px; font-size: 0.9375rem; font-weight: 600; border-radius: 8px; margin-top: 0.25rem; background: linear-gradient(180deg, #0d9488, #0f766e); color: #fff; border: none; cursor: pointer; transition: box-shadow 0.2s ease, transform 0.02s ease; }
+    .profile-save-btn:hover { box-shadow: 0 4px 14px rgba(13,148,136,0.4); }
+    .profile-save-btn:active { transform: scale(0.98); }
+    .profile-advice-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0; }
+    .profile-advice-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--color-border); }
+    .profile-advice-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .profile-advice__avatar { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(145deg, #0d9488, #0f766e); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+    .profile-advice__body strong { display: block; font-size: 0.9375rem; color: var(--color-text); margin-bottom: 0.2rem; font-weight: 600; }
+    .profile-advice__body p { font-size: 0.875rem; color: var(--color-text-muted); margin: 0; line-height: 1.45; }
+    .profile-card--table { overflow: hidden; border-radius: 12px; margin-top: 0.5rem; }
+    .profile-strategy-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+    .profile-strategy-table thead { background: rgba(0,0,0,0.03); }
+    .profile-strategy-table th { text-align: left; padding: 0.875rem 1.25rem; color: var(--color-text-muted); font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.02em; border-bottom: 1px solid var(--color-border); }
+    .profile-strategy-table td { padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+    .profile-strategy-table tbody tr:hover { background: rgba(0,0,0,0.02); }
     .profile-strategy-table tr:last-child td { border-bottom: none; }
-    .profile-status-badge { display: inline-block; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 600; }
-    .profile-status-badge--online { background: rgba(0,128,128,0.15); color: #008080; }
-    .profile-status-badge--offline { background: rgba(92,92,122,0.2); color: #5C5C7A; }
-    .profile-status-badge--warning { background: rgba(245,158,11,0.2); color: #B45309; }
-    .profile-progress { height: 8px; border-radius: 4px; background: var(--color-border); overflow: hidden; min-width: 80px; max-width: 160px; }
-    .profile-progress__fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #008080, #20B2AA); transition: width 0.4s ease; }
+    .profile-status-badge { display: inline-block; padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; }
+    .profile-status-badge--online { background: rgba(13,148,136,0.12); color: #0d9488; }
+    .profile-status-badge--offline { background: rgba(100,116,139,0.15); color: var(--color-text-muted); }
+    .profile-status-badge--warning { background: rgba(245,158,11,0.15); color: #B45309; }
+    .profile-progress { height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; min-width: 80px; max-width: 140px; }
+    .profile-progress__fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6); transition: width 0.4s ease; }
     .table-wrap { overflow-x: auto; }
     .main-content { display: block; }
     .main-content.is-hidden { display: none; }
@@ -215,18 +333,32 @@
     }
     @media (min-width: 769px) { .main__mobile-header { display: none; } }
     @media (max-width: 600px) { .settings-form__row { grid-template-columns: 1fr; } .profile-form__row { grid-template-columns: 1fr; } }
-    @media (max-width: 900px) { .profile-bento { grid-template-columns: 1fr; } .profile-header-card { margin-left: var(--space-md); margin-right: var(--space-md); } .profile-content { padding-left: var(--space-md); padding-right: var(--space-md); } }
+    @media (max-width: 900px) {
+      .profile-bento { grid-template-columns: 1fr; }
+      .profile-hero { margin-left: 1rem; margin-right: 1rem; }
+      .profile-tabs-wrap { margin-left: 1rem; margin-right: 1rem; padding-left: 1rem; padding-right: 1rem; }
+      .profile-header-card { padding-left: 1rem; padding-right: 1rem; }
+      .profile-content { padding-left: 1rem; padding-right: 1rem; }
+    }
     @media (max-width: 600px) {
-      .profile-tabs { flex-wrap: wrap; gap: 4px; padding: 6px; }
-      .profile-tab { padding: var(--space-xs) var(--space-sm); font-size: 0.8rem; }
-      .profile-content { padding: var(--space-lg) var(--space-md) 0; }
-      .profile-tab-panel { min-width: 0; overflow-wrap: break-word; }
-      .profile-tab-panel .profile-card { padding: var(--space-md); }
-      .profile-tab-panel .profile-card__title { font-size: 0.9rem; margin-bottom: var(--space-sm); }
+      .profile-tabs { flex-wrap: wrap; }
+      .profile-tab { padding: 0.75rem 1rem; font-size: 0.875rem; }
+      .profile-content { padding: 1.5rem 1rem 2rem; }
+      .profile-hero { margin-left: 0.75rem; margin-right: 0.75rem; }
+      .profile-tabs-wrap { margin-left: 0.75rem; margin-right: 0.75rem; }
+      .profile-header-card { padding-left: 0.75rem; padding-right: 0.75rem; padding-bottom: 1.25rem; margin-top: -40px; }
+      .profile-avatar { width: 72px; height: 72px; font-size: 1.5rem; }
+      .profile-header__name { font-size: 1.25rem; }
+      .profile-form__row { grid-template-columns: 1fr; }
+      .profile-tab-panel .profile-card { padding: 1.25rem; }
+      .profile-tab-panel .profile-card__title { font-size: 0.9375rem; margin-bottom: 1rem; }
       .profile-tab-panel .profile-card__lead { font-size: 0.875rem; }
-      .profile-tab-panel .profile-simple-list li { padding-left: 1rem; font-size: 0.9rem; word-wrap: break-word; }
-      .profile-tab-panel .profile-card__muted { font-size: 0.8rem; }
+      .profile-tab-panel .profile-simple-list li { padding-left: 1.25rem; font-size: 0.9rem; }
+      .profile-tab-panel .profile-card__muted { font-size: 0.8125rem; }
       .profile-tab-panel .btn-primary { width: 100%; max-width: 100%; }
+      .profile-dl { grid-template-columns: 1fr; gap: 0.25rem 0; }
+      .profile-dl dt { margin-top: 0.5rem; }
+      .profile-dl dt:first-child { margin-top: 0; }
     }
   </style>
 </head>
@@ -242,7 +374,8 @@
         <a href="dashboard.html" class="nav-overview active"><i class="fas fa-chart-pie"></i><span class="sidebar__nav-text">Overview</span></a>
         <a href="#has-quiz-state" class="nav-strategy"><i class="fas fa-map-marked-alt"></i><span class="sidebar__nav-text">My Strategy</span></a>
         <a href="#templates" class="nav-toolkit"><i class="fas fa-briefcase"></i><span class="sidebar__nav-text">Toolkit</span></a>
-        <a href="#settings" class="nav-profile"><i class="fas fa-user-circle"></i><span class="sidebar__nav-text">Profile</span></a>
+        <a href="#profile" class="nav-profile"><i class="fas fa-user-circle"></i><span class="sidebar__nav-text">Profile</span></a>
+        <a href="#settings" class="nav-settings"><i class="fas fa-cog"></i><span class="sidebar__nav-text">Settings</span></a>
         <a href="index.html" id="logout-link"><i class="fas fa-sign-out-alt"></i><span class="sidebar__nav-text">Logout</span></a>
       </nav>
       <div class="sidebar__help">
@@ -255,6 +388,19 @@
     </aside>
 
     <main class="main dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="dashboard-topbar__user">
+          <div class="dashboard-topbar__avatar" id="dashboard-topbar-avatar">U</div>
+          <div class="dashboard-topbar__info">
+            <span class="dashboard-topbar__name" id="dashboard-topbar-name">User</span>
+            <span class="dashboard-topbar__email" id="dashboard-topbar-email">email@example.com</span>
+          </div>
+        </div>
+        <div class="dashboard-topbar__links">
+          <a href="#profile" class="dashboard-topbar__profile-link"><i class="fas fa-user"></i> Profile</a>
+          <a href="#settings" class="dashboard-topbar__profile-link"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+      </header>
       <div class="main__mobile-header">
         <button type="button" class="sidebar__toggle" aria-label="Open menu" id="sidebar-open" style="display: none;">
           <i class="fas fa-bars"></i>
@@ -635,15 +781,24 @@
         </section>
       </div>
 
-      <!-- Profile Panel — Purity-style -->
-      <div class="settings-panel profile-panel" id="settings-panel">
-        <div class="profile-cover"></div>
-        <div class="profile-header-card">
-          <div class="profile-avatar" id="profile-avatar">U</div>
-          <div class="profile-header__info">
-            <h1 class="profile-header__name" id="profile-header-name">User</h1>
-            <p class="profile-header__email" id="profile-header-email">email@domain.com</p>
+      <!-- Profile Panel — separate section -->
+      <div class="dashboard-panel profile-panel" id="profile-panel">
+        <div class="profile-panel__header">
+          <h1 class="profile-panel__title"><i class="fas fa-user-circle"></i> Profile</h1>
+          <p class="profile-panel__intro">Manage your account details, view recent advice, and track your strategy progress.</p>
+        </div>
+        <div class="profile-hero">
+          <div class="profile-cover"></div>
+          <div class="profile-header-card">
+            <div class="profile-avatar" id="profile-avatar">U</div>
+            <div class="profile-header__info">
+              <h1 class="profile-header__name" id="profile-header-name">User</h1>
+              <p class="profile-header__email" id="profile-header-email">email@domain.com</p>
+              <span class="profile-header__badge"><i class="fas fa-shield-alt"></i> Account</span>
+            </div>
           </div>
+        </div>
+        <div class="profile-tabs-wrap">
           <nav class="profile-tabs" aria-label="Profile sections">
             <button type="button" class="profile-tab active" data-tab="overview">Overview</button>
             <button type="button" class="profile-tab" data-tab="teams">Teams</button>
@@ -656,33 +811,22 @@
           <div id="profile-panel-overview" class="profile-tab-panel is-visible">
           <div class="profile-bento">
             <div class="profile-card profile-card--glass">
-              <h2 class="profile-card__title">Platform Settings</h2>
-              <div class="profile-toggles">
-                <label class="profile-toggle">
-                  <input type="checkbox" id="settings-email-notify" class="profile-toggle__input" checked>
-                  <span class="profile-toggle__track"></span>
-                  <span class="profile-toggle__label">Email on update</span>
-                </label>
-                <label class="profile-toggle">
-                  <input type="checkbox" id="settings-sms-alerts" class="profile-toggle__input">
-                  <span class="profile-toggle__track"></span>
-                  <span class="profile-toggle__label">SMS alerts</span>
-                </label>
+              <h2 class="profile-card__title"><i class="fas fa-id-card"></i> Profile Information</h2>
+              <div class="profile-info-section">
+                <dl class="profile-dl">
+                  <dt>Full Name</dt>
+                  <dd id="profile-dl-name">—</dd>
+                  <dt>Phone</dt>
+                  <dd id="profile-dl-phone">—</dd>
+                  <dt>Location</dt>
+                  <dd id="profile-dl-address">—</dd>
+                  <dt>Occupation</dt>
+                  <dd id="profile-dl-occupation">—</dd>
+                </dl>
+                <p class="profile-bio" id="profile-bio">Update your profile below to add a short bio.</p>
               </div>
-            </div>
-            <div class="profile-card profile-card--glass">
-              <h2 class="profile-card__title">Profile Information</h2>
-              <dl class="profile-dl">
-                <dt>Full Name</dt>
-                <dd id="profile-dl-name">—</dd>
-                <dt>Phone</dt>
-                <dd id="profile-dl-phone">—</dd>
-                <dt>Location</dt>
-                <dd id="profile-dl-address">—</dd>
-                <dt>Occupation</dt>
-                <dd id="profile-dl-occupation">—</dd>
-              </dl>
-              <p class="profile-bio" id="profile-bio">Update your profile to add a short bio.</p>
+              <div class="profile-form-divider"></div>
+              <p class="profile-form__heading">Edit profile</p>
               <form id="settings-form" class="settings-form profile-form">
                 <div class="profile-form__row">
                   <div class="form-group">
@@ -725,7 +869,7 @@
               </form>
             </div>
             <div class="profile-card profile-card--glass">
-              <h2 class="profile-card__title">Recent Advice</h2>
+              <h2 class="profile-card__title"><i class="fas fa-lightbulb"></i> Recent Advice</h2>
               <ul class="profile-advice-list">
                 <li class="profile-advice-item">
                   <span class="profile-advice__avatar">A</span>
@@ -753,7 +897,7 @@
           </div>
 
           <div class="profile-card profile-card--glass profile-card--table">
-            <h2 class="profile-card__title">Strategy Status</h2>
+            <h2 class="profile-card__title"><i class="fas fa-tasks"></i> Strategy Status</h2>
             <div class="table-wrap">
               <table class="profile-strategy-table">
                 <thead>
@@ -825,6 +969,158 @@
           </div>
         </div>
       </div>
+
+      <!-- Settings Panel — full page, professional -->
+      <div class="dashboard-panel settings-panel" id="settings-panel">
+        <div class="settings-panel__header">
+          <h1 class="settings-panel__title"><i class="fas fa-cog"></i> Settings</h1>
+          <p class="settings-panel__intro">Control how your dashboard behaves, how data is displayed, and how you receive updates. All preferences are stored in your browser and apply only to this device.</p>
+        </div>
+        <div class="settings-panel__inner">
+          <div class="user-settings-page">
+            <div class="user-settings-section">Dashboard</div>
+            <div class="user-settings-grid">
+              <div class="user-settings-block">
+                <div class="user-settings-block__head">
+                  <div class="user-settings-block__icon"><i class="fas fa-columns"></i></div>
+                  <div>
+                    <h3 class="user-settings-block__title">Default section on open</h3>
+                    <p class="user-settings-block__desc">Which section loads first when you open your dashboard.</p>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="settings-default-view">Opening section</label>
+                  <select id="settings-default-view" class="form-input">
+                    <option value="overview">Overview</option>
+                    <option value="strategy">My Strategy</option>
+                    <option value="toolkit">Toolkit</option>
+                    <option value="profile">Profile</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="user-settings-section">Appearance</div>
+            <div class="user-settings-grid">
+              <div class="user-settings-block">
+                <div class="user-settings-block__head">
+                  <div class="user-settings-block__icon"><i class="fas fa-palette"></i></div>
+                  <div>
+                    <h3 class="user-settings-block__title">Theme</h3>
+                    <p class="user-settings-block__desc">Light, dark, or follow your system preference.</p>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="settings-theme">Appearance</label>
+                  <select id="settings-theme" class="form-input">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="system">System</option>
+                  </select>
+                </div>
+              </div>
+              <div class="user-settings-block">
+                <div class="user-settings-block__head">
+                  <div class="user-settings-block__icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div>
+                    <h3 class="user-settings-block__title">Date &amp; time format</h3>
+                    <p class="user-settings-block__desc">How dates appear across your dashboard and toolkit.</p>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="settings-date-format">Format</label>
+                  <select id="settings-date-format" class="form-input">
+                    <option value="short">Short — 2/7/26, 4:30 PM</option>
+                    <option value="medium">Medium — Feb 7, 2026, 4:30 PM</option>
+                    <option value="long">Long — February 7, 2026 at 4:30 PM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="user-settings-section">Display</div>
+            <div class="user-settings-grid">
+              <div class="user-settings-block">
+                <div class="user-settings-block__head">
+                  <div class="user-settings-block__icon"><i class="fas fa-compress-arrows-alt"></i></div>
+                  <div>
+                    <h3 class="user-settings-block__title">List density</h3>
+                    <p class="user-settings-block__desc">Comfortable spacing or compact rows in lists and tables.</p>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="settings-density">Density</label>
+                  <select id="settings-density" class="form-input">
+                    <option value="comfortable">Comfortable</option>
+                    <option value="compact">Compact</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="user-settings-section">Notifications</div>
+            <div class="user-settings-grid">
+              <div class="user-settings-block">
+                <div class="user-settings-block__head">
+                  <div class="user-settings-block__icon"><i class="fas fa-bell"></i></div>
+                  <div>
+                    <h3 class="user-settings-block__title">Alerts &amp; updates</h3>
+                    <p class="user-settings-block__desc">Choose how you want to be notified about your exit plan and deadlines.</p>
+                  </div>
+                </div>
+                <div class="user-settings-alerts-list">
+                  <label class="user-settings-toggle profile-toggle">
+                    <span class="profile-toggle__label">Email on update</span>
+                    <span class="alerts-toggle-switch">
+                      <input type="checkbox" id="settings-email-notify" class="profile-toggle__input" checked>
+                      <span class="profile-toggle__track"></span>
+                    </span>
+                  </label>
+                  <label class="user-settings-toggle profile-toggle">
+                    <span class="profile-toggle__label">SMS alerts</span>
+                    <span class="alerts-toggle-switch">
+                      <input type="checkbox" id="settings-sms-alerts" class="profile-toggle__input">
+                      <span class="profile-toggle__track"></span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <div class="user-settings-block">
+                <div class="user-settings-block__head">
+                  <div class="user-settings-block__icon"><i class="fas fa-clock"></i></div>
+                  <div>
+                    <h3 class="user-settings-block__title">Deadline reminders</h3>
+                    <p class="user-settings-block__desc">When to remind you before notice or move-out dates.</p>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="settings-reminder">Remind me</label>
+                  <select id="settings-reminder" class="form-input">
+                    <option value="none">No reminders</option>
+                    <option value="1">1 day before</option>
+                    <option value="3">3 days before</option>
+                    <option value="7">1 week before</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="user-settings-section">Data &amp; privacy</div>
+            <div class="user-settings-info">
+              <i class="fas fa-shield-alt"></i>
+              <div>
+                <p class="user-settings-info__title">Stored in your browser</p>
+                <p class="user-settings-info__text">All preferences and your exit plan data are saved locally on this device. We do not store your data on our servers. To remove everything, clear this site&apos;s data in your browser settings.</p>
+              </div>
+            </div>
+
+            <div class="user-settings-actions">
+              <button type="button" id="settings-save-btn" class="btn-primary btn-accent"><i class="fas fa-save"></i> Save settings</button>
+              <span class="user-settings-saved" id="settings-saved-msg" style="display: none; color: var(--color-accent); font-size: 0.9rem; font-weight: 500;">Settings saved.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -838,6 +1134,55 @@
 
       var mobileName = document.getElementById('mobile-user-name');
       if (mobileName) mobileName.textContent = user.name || 'User';
+      var tbAvatar = document.getElementById('dashboard-topbar-avatar');
+      var tbName = document.getElementById('dashboard-topbar-name');
+      var tbEmail = document.getElementById('dashboard-topbar-email');
+      if (tbAvatar || tbName || tbEmail) {
+        var name = user.name || 'User';
+        var email = user.email || '';
+        var initials = (name.split(' ').map(function(w) { return w[0]; }).join('') || 'U').slice(0, 2).toUpperCase();
+        if (tbAvatar) tbAvatar.textContent = initials;
+        if (tbName) tbName.textContent = name;
+        if (tbEmail) tbEmail.textContent = email || '—';
+      }
+      var DASHBOARD_THEME_KEY = 'silentlease_dashboard_theme';
+      var DASHBOARD_SETTINGS_KEY = 'silentlease_dashboard_settings';
+      function getDashboardSettings() {
+        try {
+          var raw = localStorage.getItem(DASHBOARD_SETTINGS_KEY);
+          var s = raw ? JSON.parse(raw) : {};
+          return {
+            defaultView: s.defaultView || 'overview',
+            dateFormat: s.dateFormat || 'medium',
+            density: s.density || 'comfortable',
+            reminder: s.reminder || 'none',
+            emailNotify: !!s.emailNotify,
+            smsAlerts: !!s.smsAlerts
+          };
+        } catch (e) { return { defaultView: 'overview', dateFormat: 'medium', density: 'comfortable', reminder: 'none', emailNotify: true, smsAlerts: false }; }
+      }
+      function saveDashboardSettings(settings) {
+        try { localStorage.setItem(DASHBOARD_SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+      }
+      function getDashboardTheme() {
+        try {
+          var t = localStorage.getItem(DASHBOARD_THEME_KEY);
+          if (t === 'light' || t === 'dark' || t === 'system') return t;
+        } catch (e) {}
+        return 'light';
+      }
+      function saveDashboardTheme(theme) {
+        try { localStorage.setItem(DASHBOARD_THEME_KEY, theme); } catch (e) {}
+      }
+      function applyDashboardTheme() {
+        var theme = getDashboardTheme();
+        var resolved = theme;
+        if (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) resolved = 'dark';
+        else if (theme === 'system') resolved = 'light';
+        document.documentElement.setAttribute('data-theme', resolved === 'dark' ? 'dark' : '');
+      }
+      applyDashboardTheme();
+      if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addListener(function() { if (getDashboardTheme() === 'system') applyDashboardTheme(); });
 
       // Dashboard date (top right)
       var dateEl = document.getElementById('dashboard-date');
@@ -895,9 +1240,14 @@
         closeSidebar();
         e.preventDefault();
         var href = link.getAttribute('href') || '';
+        if (href === '#profile') {
+          window.location.hash = 'profile';
+          showProfile();
+          return;
+        }
         if (href === '#settings') {
           window.location.hash = 'settings';
-          setActiveNav(link);
+          showSettings();
           return;
         }
         if (href === 'dashboard.html' || href === '' || href === '#') {
@@ -923,6 +1273,31 @@
         a.addEventListener('click', handleNavClick);
       });
 
+      // Theme (Appearance) — save and apply
+      var themeSelect = document.getElementById('settings-theme');
+      if (themeSelect) themeSelect.addEventListener('change', function() {
+        var v = this.value;
+        if (typeof saveDashboardTheme === 'function') saveDashboardTheme(v);
+        if (typeof applyDashboardTheme === 'function') applyDashboardTheme();
+      });
+      // Save settings button
+      var saveBtn = document.getElementById('settings-save-btn');
+      var savedMsg = document.getElementById('settings-saved-msg');
+      if (saveBtn) saveBtn.addEventListener('click', function() {
+        var themeEl = document.getElementById('settings-theme');
+        if (themeEl && typeof saveDashboardTheme === 'function') saveDashboardTheme(themeEl.value);
+        if (typeof applyDashboardTheme === 'function') applyDashboardTheme();
+        saveDashboardSettings({
+          defaultView: (document.getElementById('settings-default-view') || {}).value || 'overview',
+          dateFormat: (document.getElementById('settings-date-format') || {}).value || 'medium',
+          density: (document.getElementById('settings-density') || {}).value || 'comfortable',
+          reminder: (document.getElementById('settings-reminder') || {}).value || 'none',
+          emailNotify: (document.getElementById('settings-email-notify') || {}).checked,
+          smsAlerts: (document.getElementById('settings-sms-alerts') || {}).checked
+        });
+        if (savedMsg) { savedMsg.style.display = 'inline'; savedMsg.setAttribute('aria-live', 'polite'); setTimeout(function() { savedMsg.style.display = 'none'; }, 2500); }
+        if (typeof showToast === 'function') showToast('Settings saved.', 'success');
+      });
       // Profile tabs (Overview / Teams / Projects / Terms) — show corresponding panel
       document.querySelectorAll('.profile-tab').forEach(function(btn) {
         btn.addEventListener('click', function() {
@@ -967,16 +1342,43 @@
         if (typeof showToast === 'function') showToast('PDF report generated. Check your downloads.', 'success');
       });
 
-      // Settings / Main toggle
-      function showSettings() {
+      // Profile / Settings / Main toggle
+      function showProfile() {
         document.getElementById('main-content').classList.add('is-hidden');
-        document.getElementById('settings-panel').classList.add('is-visible');
+        document.getElementById('profile-panel').classList.add('is-visible');
+        document.getElementById('settings-panel').classList.remove('is-visible');
         setActiveNav(document.querySelector('.nav-profile'));
+        document.querySelectorAll('.sidebar__nav a:not(.nav-profile):not(#logout-link)').forEach(function(a) { a.classList.remove('active'); });
+        document.querySelector('.nav-profile').classList.add('active');
         populateSettingsForm();
         if (typeof updateProfileStrategyTable === 'function') updateProfileStrategyTable();
       }
+      function showSettings() {
+        document.getElementById('main-content').classList.add('is-hidden');
+        document.getElementById('profile-panel').classList.remove('is-visible');
+        document.getElementById('settings-panel').classList.add('is-visible');
+        setActiveNav(document.querySelector('.nav-settings'));
+        document.querySelectorAll('.sidebar__nav a:not(.nav-settings):not(#logout-link)').forEach(function(a) { a.classList.remove('active'); });
+        document.querySelector('.nav-settings').classList.add('active');
+        var themeEl = document.getElementById('settings-theme');
+        if (themeEl && typeof getDashboardTheme === 'function') themeEl.value = getDashboardTheme();
+        var set = getDashboardSettings();
+        var v = document.getElementById('settings-default-view');
+        var d = document.getElementById('settings-date-format');
+        var den = document.getElementById('settings-density');
+        var rem = document.getElementById('settings-reminder');
+        var email = document.getElementById('settings-email-notify');
+        var sms = document.getElementById('settings-sms-alerts');
+        if (v) v.value = set.defaultView;
+        if (d) d.value = set.dateFormat;
+        if (den) den.value = set.density;
+        if (rem) rem.value = set.reminder;
+        if (email) email.checked = set.emailNotify;
+        if (sms) sms.checked = set.smsAlerts;
+      }
       function showMain() {
         document.getElementById('main-content').classList.remove('is-hidden');
+        document.getElementById('profile-panel').classList.remove('is-visible');
         document.getElementById('settings-panel').classList.remove('is-visible');
         var hash = window.location.hash;
         var active = document.querySelector('.nav-overview');
@@ -986,6 +1388,8 @@
       }
       function populateSettingsForm() {
         var u = getCurrentUser();
+        var themeEl = document.getElementById('settings-theme');
+        if (themeEl && typeof getDashboardTheme === 'function') themeEl.value = getDashboardTheme();
         if (u) {
           document.getElementById('settings-name').value = u.name || '';
           document.getElementById('settings-email').value = u.email || '';
@@ -1002,10 +1406,20 @@
           document.getElementById('profile-dl-phone').textContent = u.phone || '—';
           document.getElementById('profile-dl-address').textContent = u.address || '—';
           document.getElementById('profile-dl-occupation').textContent = u.occupation || '—';
+          var tbA = document.getElementById('dashboard-topbar-avatar');
+          var tbN = document.getElementById('dashboard-topbar-name');
+          var tbE = document.getElementById('dashboard-topbar-email');
+          if (tbA) tbA.textContent = initials;
+          if (tbN) tbN.textContent = name;
+          if (tbE) tbE.textContent = email || '—';
         }
       }
       function checkHash() {
         var hash = window.location.hash;
+        if (hash === '#profile') {
+          showProfile();
+          return;
+        }
         if (hash === '#settings') {
           showSettings();
           return;
