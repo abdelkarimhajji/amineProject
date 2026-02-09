@@ -2038,10 +2038,15 @@
                 doc.setFontSize(11);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(0, 0, 0);
-                lines.forEach(function(line) {
-                  if (y > pageH - 25) { doc.addPage(); addPageHeader(); }
-                  doc.text(line, margin, y);
-                  y += 7;
+                var lineHeight = 6;
+                lines.forEach(function(paragraph) {
+                  var wrapped = doc.splitTextToSize(paragraph, maxW);
+                  wrapped.forEach(function(w) {
+                    if (y > pageH - 25) { doc.addPage(); addPageHeader(); }
+                    doc.text(w, margin, y);
+                    y += lineHeight;
+                  });
+                  y += 4;
                 });
                 y += 6;
               }
